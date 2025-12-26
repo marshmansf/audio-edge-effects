@@ -113,12 +113,40 @@ export function updateTrayMenu(): void {
           }
         },
         {
+          label: 'Spectrum Cells',
+          type: 'radio',
+          checked: settings.visualizerMode === 'spectrum-cells',
+          click: () => {
+            setSetting('visualizerMode', 'spectrum-cells')
+            notifyRenderer('visualizer-mode-changed', 'spectrum-cells')
+          }
+        },
+        {
+          label: 'Spectrum Bars',
+          type: 'radio',
+          checked: settings.visualizerMode === 'spectrum-bars',
+          click: () => {
+            setSetting('visualizerMode', 'spectrum-bars')
+            notifyRenderer('visualizer-mode-changed', 'spectrum-bars')
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'Waveform',
           type: 'radio',
           checked: settings.visualizerMode === 'waveform',
           click: () => {
             setSetting('visualizerMode', 'waveform')
             notifyRenderer('visualizer-mode-changed', 'waveform')
+          }
+        },
+        {
+          label: 'Waveform Bars',
+          type: 'radio',
+          checked: settings.visualizerMode === 'waveform-bars',
+          click: () => {
+            setSetting('visualizerMode', 'waveform-bars')
+            notifyRenderer('visualizer-mode-changed', 'waveform-bars')
           }
         }
       ]

@@ -84,8 +84,8 @@ export class WaveformVisualizer {
     for (let i = 0; i < this.dataArray.length; i++) {
       const v = this.dataArray[i] / 128.0  // ~1.0 when silent, 0-2 range
       const deviation = v - 1  // -1 to 1 range
-      // Scale deviation to use full visible height, baseline at bottom
-      const y = baseline - (deviation * (height - 1))
+      // Scale deviation to use full visible height, baseline at bottom (3x magnitude)
+      const y = baseline - (deviation * (height - 1) * 3)
 
       if (i === 0) {
         this.ctx.moveTo(x, y)

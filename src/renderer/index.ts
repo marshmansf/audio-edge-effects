@@ -1,6 +1,9 @@
 import { captureAudio, AudioCaptureResult, getAudioDevices, findBlackHoleDevice } from './audio/capture'
 import { SpectrumVisualizer } from './visualizers/spectrum'
+import { SpectrumCellsVisualizer } from './visualizers/spectrum-cells'
+import { SpectrumBarsVisualizer } from './visualizers/spectrum-bars'
 import { WaveformVisualizer } from './visualizers/waveform'
+import { WaveformBarsVisualizer } from './visualizers/waveform-bars'
 
 // Type definitions for Electron API exposed via preload
 declare global {
@@ -16,11 +19,13 @@ declare global {
   }
 }
 
+type VisualizerMode = 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'waveform' | 'waveform-bars'
+
 interface Settings {
   position: string
   height: number
   opacity: number
-  visualizerMode: 'spectrum' | 'waveform'
+  visualizerMode: VisualizerMode
   audioDeviceId: string | null
   colorScheme: string
   barCount: number
@@ -29,6 +34,18 @@ interface Settings {
 
 type EdgePosition = 'top' | 'bottom' | 'left' | 'right'
 
+// Color map for waveform visualizers
+const waveformColorMap: Record<string, string> = {
+  classic: '#00ff00',
+  blue: '#00ccff',
+  purple: '#cc00ff',
+  fire: '#ff6600',
+  ice: '#00ffff',
+  light: '#ffffff',
+  dark: '#0f3460',
+  rainbow: '#ff00ff'
+}
+
 class AudioVisualizerApp {
   private container: HTMLElement
   private statusEl: HTMLElement
@@ -36,9 +53,12 @@ class AudioVisualizerApp {
 
   private audioCapture: AudioCaptureResult | null = null
   private spectrumVisualizer: SpectrumVisualizer | null = null
+  private spectrumCellsVisualizer: SpectrumCellsVisualizer | null = null
+  private spectrumBarsVisualizer: SpectrumBarsVisualizer | null = null
   private waveformVisualizer: WaveformVisualizer | null = null
+  private waveformBarsVisualizer: WaveformBarsVisualizer | null = null
 
-  private currentMode: 'spectrum' | 'waveform' = 'spectrum'
+  private currentMode: VisualizerMode = 'spectrum'
   private currentPosition: EdgePosition = 'bottom'
   private settings: Settings | null = null
 
@@ -100,7 +120,7 @@ class AudioVisualizerApp {
 
   private setupIPCListeners(): void {
     window.electronAPI.onVisualizerModeChanged((mode) => {
-      this.switchMode(mode as 'spectrum' | 'waveform')
+      this.switchMode(mode as VisualizerMode)
     })
 
     window.electronAPI.onOpacityChanged((opacity) => {
@@ -118,24 +138,23 @@ class AudioVisualizerApp {
   }
 
   private setColorScheme(scheme: string): void {
+    const color = waveformColorMap[scheme] || '#00ff00'
+
     if (this.spectrumVisualizer) {
       this.spectrumVisualizer.setGradient(scheme)
     }
+    if (this.spectrumCellsVisualizer) {
+      this.spectrumCellsVisualizer.setColorScheme(scheme)
+    }
+    if (this.spectrumBarsVisualizer) {
+      this.spectrumBarsVisualizer.setColorScheme(scheme)
+    }
     if (this.waveformVisualizer) {
-      // Map color schemes to waveform colors
-      const colorMap: Record<string, string> = {
-        classic: '#00ff00',
-        blue: '#00ccff',
-        purple: '#cc00ff',
-        fire: '#ff6600',
-        ice: '#00ffff',
-        light: '#ffffff',
-        dark: '#0f3460',
-        rainbow: '#ff00ff'
-      }
-      const color = colorMap[scheme] || '#00ff00'
       this.waveformVisualizer.setColor(color)
       this.waveformVisualizer.setGlowColor(color)
+    }
+    if (this.waveformBarsVisualizer) {
+      this.waveformBarsVisualizer.setColorScheme(scheme)
     }
   }
 
@@ -174,62 +193,93 @@ class AudioVisualizerApp {
     this.container.innerHTML = ''
 
     const colorScheme = this.settings?.colorScheme || 'classic'
+    const color = waveformColorMap[colorScheme] || '#00ff00'
 
-    if (this.currentMode === 'spectrum') {
-      this.spectrumVisualizer = new SpectrumVisualizer({
-        container: this.container,
-        barCount: this.settings?.barCount || 64,
-        colorScheme: colorScheme,
-        showPeaks: this.settings?.showPeaks ?? true
-      })
+    switch (this.currentMode) {
+      case 'spectrum':
+        this.spectrumVisualizer = new SpectrumVisualizer({
+          container: this.container,
+          barCount: this.settings?.barCount || 64,
+          colorScheme: colorScheme,
+          showPeaks: this.settings?.showPeaks ?? true
+        })
+        await this.spectrumVisualizer.init(
+          this.audioCapture.analyser,
+          this.audioCapture.audioContext
+        )
+        this.spectrumVisualizer.setGradient(colorScheme)
+        break
 
-      await this.spectrumVisualizer.init(
-        this.audioCapture.analyser,
-        this.audioCapture.audioContext
-      )
+      case 'spectrum-cells':
+        this.spectrumCellsVisualizer = new SpectrumCellsVisualizer({
+          container: this.container,
+          barCount: 384,
+          colorScheme: colorScheme
+        })
+        this.spectrumCellsVisualizer.init(this.audioCapture.analyser)
+        break
 
-      // Apply the color scheme after initialization
-      this.spectrumVisualizer.setGradient(colorScheme)
-    } else {
-      // Map color schemes to waveform colors
-      const colorMap: Record<string, string> = {
-        classic: '#00ff00',
-        blue: '#00ccff',
-        purple: '#cc00ff',
-        fire: '#ff6600',
-        ice: '#00ffff',
-        light: '#ffffff',
-        dark: '#0f3460',
-        rainbow: '#ff00ff'
-      }
-      const color = colorMap[colorScheme] || '#00ff00'
+      case 'spectrum-bars':
+        this.spectrumBarsVisualizer = new SpectrumBarsVisualizer({
+          container: this.container,
+          barCount: 240,
+          colorScheme: colorScheme
+        })
+        this.spectrumBarsVisualizer.init(this.audioCapture.analyser)
+        break
 
-      this.waveformVisualizer = new WaveformVisualizer({
-        container: this.container,
-        color: color,
-        glowColor: color,
-        glowIntensity: 15
-      })
+      case 'waveform':
+        this.waveformVisualizer = new WaveformVisualizer({
+          container: this.container,
+          color: color,
+          glowColor: color,
+          glowIntensity: 15
+        })
+        this.waveformVisualizer.init(this.audioCapture.analyser)
+        break
 
-      this.waveformVisualizer.init(this.audioCapture.analyser)
+      case 'waveform-bars':
+        this.waveformBarsVisualizer = new WaveformBarsVisualizer({
+          container: this.container,
+          barCount: 192,
+          colorScheme: colorScheme
+        })
+        this.waveformBarsVisualizer.init(this.audioCapture.analyser)
+        break
     }
   }
 
-  private async switchMode(mode: 'spectrum' | 'waveform'): Promise<void> {
+  private async switchMode(mode: VisualizerMode): Promise<void> {
     if (mode === this.currentMode) return
 
-    // Destroy current visualizer
+    // Destroy all visualizers
+    this.destroyAllVisualizers()
+
+    this.currentMode = mode
+    await this.initVisualizer()
+  }
+
+  private destroyAllVisualizers(): void {
     if (this.spectrumVisualizer) {
       this.spectrumVisualizer.destroy()
       this.spectrumVisualizer = null
+    }
+    if (this.spectrumCellsVisualizer) {
+      this.spectrumCellsVisualizer.destroy()
+      this.spectrumCellsVisualizer = null
+    }
+    if (this.spectrumBarsVisualizer) {
+      this.spectrumBarsVisualizer.destroy()
+      this.spectrumBarsVisualizer = null
     }
     if (this.waveformVisualizer) {
       this.waveformVisualizer.destroy()
       this.waveformVisualizer = null
     }
-
-    this.currentMode = mode
-    await this.initVisualizer()
+    if (this.waveformBarsVisualizer) {
+      this.waveformBarsVisualizer.destroy()
+      this.waveformBarsVisualizer = null
+    }
   }
 
   private showStatus(message: string): void {
