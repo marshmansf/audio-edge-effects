@@ -13,7 +13,7 @@ export function getSettings(): Settings {
     visualizerMode: store.get('visualizerMode'),
     audioDeviceId: store.get('audioDeviceId'),
     colorScheme: store.get('colorScheme'),
-    barCount: store.get('barCount'),
+    density: store.get('density'),
     showPeaks: store.get('showPeaks')
   }
 }

@@ -112,7 +112,8 @@ export class SpectrumCellsVisualizer {
     this.ctx.clearRect(0, 0, width, height)
 
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
-    const cellRows = 10 // Number of vertical cells per bar
+    // Scale cell rows based on density: 10 rows at low density, up to 40 rows at max
+    const cellRows = Math.max(10, Math.round(this.barCount / 19))
     const barGap = 2
     const cellGap = 1
     const barWidth = (width - (this.barCount - 1) * barGap) / this.barCount

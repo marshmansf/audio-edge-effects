@@ -206,6 +206,59 @@ export function updateTrayMenu(): void {
       ]
     },
     {
+      label: 'Density',
+      submenu: [
+        {
+          label: 'Minimal (16)',
+          type: 'radio',
+          checked: settings.density === 16,
+          click: () => setDensity(16)
+        },
+        {
+          label: 'Very Low (32)',
+          type: 'radio',
+          checked: settings.density === 32,
+          click: () => setDensity(32)
+        },
+        {
+          label: 'Low (64)',
+          type: 'radio',
+          checked: settings.density === 64,
+          click: () => setDensity(64)
+        },
+        {
+          label: 'Medium (128)',
+          type: 'radio',
+          checked: settings.density === 128,
+          click: () => setDensity(128)
+        },
+        {
+          label: 'High (256)',
+          type: 'radio',
+          checked: settings.density === 256,
+          click: () => setDensity(256)
+        },
+        {
+          label: 'Very High (384)',
+          type: 'radio',
+          checked: settings.density === 384,
+          click: () => setDensity(384)
+        },
+        {
+          label: 'Ultra (512)',
+          type: 'radio',
+          checked: settings.density === 512,
+          click: () => setDensity(512)
+        },
+        {
+          label: 'Maximum (768)',
+          type: 'radio',
+          checked: settings.density === 768,
+          click: () => setDensity(768)
+        }
+      ]
+    },
+    {
       label: 'Size',
       submenu: [
         {
@@ -302,6 +355,12 @@ function setOpacity(opacity: number): void {
 function setColorScheme(scheme: string): void {
   setSetting('colorScheme', scheme)
   notifyRenderer('color-scheme-changed', scheme)
+  updateTrayMenu()
+}
+
+function setDensity(density: number): void {
+  setSetting('density', density)
+  notifyRenderer('density-changed', density)
   updateTrayMenu()
 }
 

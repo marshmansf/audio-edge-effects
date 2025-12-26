@@ -18,5 +18,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onColorSchemeChanged: (callback: (scheme: string) => void) => {
     ipcRenderer.on('color-scheme-changed', (_event, scheme) => callback(scheme))
+  },
+
+  onDensityChanged: (callback: (density: number) => void) => {
+    ipcRenderer.on('density-changed', (_event, density) => callback(density))
   }
 })

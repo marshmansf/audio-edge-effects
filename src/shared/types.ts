@@ -9,7 +9,7 @@ export interface Settings {
   visualizerMode: VisualizerMode
   audioDeviceId: string | null
   colorScheme: string
-  barCount: number
+  density: number
   showPeaks: boolean
 }
 
@@ -20,7 +20,7 @@ export const defaultSettings: Settings = {
   visualizerMode: 'spectrum',
   audioDeviceId: null,
   colorScheme: 'classic',
-  barCount: 64,
+  density: 256,
   showPeaks: true
 }
 

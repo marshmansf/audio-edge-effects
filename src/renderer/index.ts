@@ -15,6 +15,7 @@ declare global {
       onOpacityChanged: (callback: (opacity: number) => void) => void
       onPositionChanged: (callback: (position: string) => void) => void
       onColorSchemeChanged: (callback: (scheme: string) => void) => void
+      onDensityChanged: (callback: (density: number) => void) => void
     }
   }
 }
@@ -28,7 +29,7 @@ interface Settings {
   visualizerMode: VisualizerMode
   audioDeviceId: string | null
   colorScheme: string
-  barCount: number
+  density: number
   showPeaks: boolean
 }
 
@@ -135,6 +136,14 @@ class AudioVisualizerApp {
     window.electronAPI.onColorSchemeChanged((scheme) => {
       this.setColorScheme(scheme)
     })
+
+    window.electronAPI.onDensityChanged((density) => {
+      if (this.settings) {
+        this.settings.density = density
+      }
+      this.destroyAllVisualizers()
+      this.initVisualizer()
+    })
   }
 
   private setColorScheme(scheme: string): void {
@@ -194,12 +203,13 @@ class AudioVisualizerApp {
 
     const colorScheme = this.settings?.colorScheme || 'classic'
     const color = waveformColorMap[colorScheme] || '#00ff00'
+    const density = this.settings?.density || 256
 
     switch (this.currentMode) {
       case 'spectrum':
         this.spectrumVisualizer = new SpectrumVisualizer({
           container: this.container,
-          barCount: this.settings?.barCount || 64,
+          barCount: density,
           colorScheme: colorScheme,
           showPeaks: this.settings?.showPeaks ?? true
         })
@@ -213,7 +223,7 @@ class AudioVisualizerApp {
       case 'spectrum-cells':
         this.spectrumCellsVisualizer = new SpectrumCellsVisualizer({
           container: this.container,
-          barCount: 384,
+          barCount: density,
           colorScheme: colorScheme
         })
         this.spectrumCellsVisualizer.init(this.audioCapture.analyser)
@@ -222,7 +232,7 @@ class AudioVisualizerApp {
       case 'spectrum-bars':
         this.spectrumBarsVisualizer = new SpectrumBarsVisualizer({
           container: this.container,
-          barCount: 240,
+          barCount: density,
           colorScheme: colorScheme
         })
         this.spectrumBarsVisualizer.init(this.audioCapture.analyser)
@@ -241,7 +251,7 @@ class AudioVisualizerApp {
       case 'waveform-bars':
         this.waveformBarsVisualizer = new WaveformBarsVisualizer({
           container: this.container,
-          barCount: 192,
+          barCount: density,
           colorScheme: colorScheme
         })
         this.waveformBarsVisualizer.init(this.audioCapture.analyser)
