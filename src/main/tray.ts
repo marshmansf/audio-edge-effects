@@ -148,6 +148,24 @@ export function updateTrayMenu(): void {
             setSetting('visualizerMode', 'waveform-bars')
             notifyRenderer('visualizer-mode-changed', 'waveform-bars')
           }
+        },
+        {
+          label: 'Waveform Glow',
+          type: 'radio',
+          checked: settings.visualizerMode === 'waveform-glow',
+          click: () => {
+            setSetting('visualizerMode', 'waveform-glow')
+            notifyRenderer('visualizer-mode-changed', 'waveform-glow')
+          }
+        },
+        {
+          label: 'Waveform Bands',
+          type: 'radio',
+          checked: settings.visualizerMode === 'waveform-bands',
+          click: () => {
+            setSetting('visualizerMode', 'waveform-bands')
+            notifyRenderer('visualizer-mode-changed', 'waveform-bands')
+          }
         }
       ]
     },

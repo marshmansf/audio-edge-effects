@@ -1,6 +1,6 @@
 export type EdgePosition = 'top' | 'bottom' | 'left' | 'right'
 
-export type VisualizerMode = 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'waveform' | 'waveform-bars'
+export type VisualizerMode = 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'waveform' | 'waveform-bars' | 'waveform-glow' | 'waveform-bands'
 
 export interface Settings {
   position: EdgePosition

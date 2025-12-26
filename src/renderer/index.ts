@@ -4,6 +4,8 @@ import { SpectrumCellsVisualizer } from './visualizers/spectrum-cells'
 import { SpectrumBarsVisualizer } from './visualizers/spectrum-bars'
 import { WaveformVisualizer } from './visualizers/waveform'
 import { WaveformBarsVisualizer } from './visualizers/waveform-bars'
+import { WaveformGlowVisualizer } from './visualizers/waveform-glow'
+import { WaveformBandsVisualizer } from './visualizers/waveform-bands'
 
 // Type definitions for Electron API exposed via preload
 declare global {
@@ -20,7 +22,7 @@ declare global {
   }
 }
 
-type VisualizerMode = 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'waveform' | 'waveform-bars'
+type VisualizerMode = 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'waveform' | 'waveform-bars' | 'waveform-glow' | 'waveform-bands'
 
 interface Settings {
   position: string
@@ -58,6 +60,8 @@ class AudioVisualizerApp {
   private spectrumBarsVisualizer: SpectrumBarsVisualizer | null = null
   private waveformVisualizer: WaveformVisualizer | null = null
   private waveformBarsVisualizer: WaveformBarsVisualizer | null = null
+  private waveformGlowVisualizer: WaveformGlowVisualizer | null = null
+  private waveformBandsVisualizer: WaveformBandsVisualizer | null = null
 
   private currentMode: VisualizerMode = 'spectrum'
   private currentPosition: EdgePosition = 'bottom'
@@ -165,6 +169,12 @@ class AudioVisualizerApp {
     if (this.waveformBarsVisualizer) {
       this.waveformBarsVisualizer.setColorScheme(scheme)
     }
+    if (this.waveformGlowVisualizer) {
+      this.waveformGlowVisualizer.setColorScheme(scheme)
+    }
+    if (this.waveformBandsVisualizer) {
+      this.waveformBandsVisualizer.setColorScheme(scheme)
+    }
   }
 
   private applyRotation(position: EdgePosition): void {
@@ -256,6 +266,23 @@ class AudioVisualizerApp {
         })
         this.waveformBarsVisualizer.init(this.audioCapture.analyser)
         break
+
+      case 'waveform-glow':
+        this.waveformGlowVisualizer = new WaveformGlowVisualizer({
+          container: this.container,
+          colorScheme: colorScheme
+        })
+        this.waveformGlowVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'waveform-bands':
+        this.waveformBandsVisualizer = new WaveformBandsVisualizer({
+          container: this.container,
+          colorScheme: colorScheme,
+          bandCount: Math.max(20, Math.floor(density / 4))
+        })
+        this.waveformBandsVisualizer.init(this.audioCapture.analyser)
+        break
     }
   }
 
@@ -289,6 +316,14 @@ class AudioVisualizerApp {
     if (this.waveformBarsVisualizer) {
       this.waveformBarsVisualizer.destroy()
       this.waveformBarsVisualizer = null
+    }
+    if (this.waveformGlowVisualizer) {
+      this.waveformGlowVisualizer.destroy()
+      this.waveformGlowVisualizer = null
+    }
+    if (this.waveformBandsVisualizer) {
+      this.waveformBandsVisualizer.destroy()
+      this.waveformBandsVisualizer = null
     }
   }
 
