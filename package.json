@@ -1,0 +1,33 @@
+{
+  "name": "audio-visualizer",
+  "version": "1.0.0",
+  "description": "A WinAmp-inspired audio visualizer that displays as a transparent edge overlay",
+  "main": "dist/main/index.js",
+  "author": "Audio Visualizer",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run build:main && concurrently --kill-others \"npm run dev:main\" \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite",
+    "dev:electron": "NODE_ENV=development electron .",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "audiomotion-analyzer": "^4.5.0",
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.6"
+  }
+}

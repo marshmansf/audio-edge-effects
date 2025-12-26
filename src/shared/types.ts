@@ -1,0 +1,41 @@
+export type EdgePosition = 'top' | 'bottom' | 'left' | 'right'
+
+export type VisualizerMode = 'spectrum' | 'waveform'
+
+export interface Settings {
+  position: EdgePosition
+  height: number
+  opacity: number
+  visualizerMode: VisualizerMode
+  audioDeviceId: string | null
+  colorScheme: string
+  barCount: number
+  showPeaks: boolean
+}
+
+export const defaultSettings: Settings = {
+  position: 'bottom',
+  height: 60,
+  opacity: 0.85,
+  visualizerMode: 'spectrum',
+  audioDeviceId: null,
+  colorScheme: 'classic',
+  barCount: 64,
+  showPeaks: true
+}
+
+export interface AudioDevice {
+  deviceId: string
+  label: string
+}
+
+// IPC channel names
+export const IPC = {
+  GET_SETTINGS: 'get-settings',
+  SET_SETTINGS: 'set-settings',
+  GET_AUDIO_DEVICES: 'get-audio-devices',
+  TOGGLE_VISUALIZER: 'toggle-visualizer',
+  SET_POSITION: 'set-position',
+  SET_OPACITY: 'set-opacity',
+  SET_VISUALIZER_MODE: 'set-visualizer-mode'
+} as const
