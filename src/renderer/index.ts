@@ -2,10 +2,18 @@ import { captureAudio, AudioCaptureResult, getAudioDevices, findBlackHoleDevice 
 import { SpectrumVisualizer } from './visualizers/spectrum'
 import { SpectrumCellsVisualizer } from './visualizers/spectrum-cells'
 import { SpectrumBarsVisualizer } from './visualizers/spectrum-bars'
+import { SpectrumCircularVisualizer } from './visualizers/spectrum-circular'
 import { WaveformVisualizer } from './visualizers/waveform'
 import { WaveformBarsVisualizer } from './visualizers/waveform-bars'
 import { WaveformGlowVisualizer } from './visualizers/waveform-glow'
 import { WaveformBandsVisualizer } from './visualizers/waveform-bands'
+import { WaveformFilledVisualizer } from './visualizers/waveform-filled'
+import { SpectrogramVisualizer } from './visualizers/spectrogram'
+import { EnergyBarsVisualizer } from './visualizers/energy-bars'
+import { BeatPulseVisualizer } from './visualizers/beat-pulse'
+import { ParticlesVisualizer } from './visualizers/particles'
+import { PlasmaVisualizer } from './visualizers/plasma'
+import { TerrainVisualizer } from './visualizers/terrain'
 
 // Type definitions for Electron API exposed via preload
 declare global {
@@ -22,7 +30,10 @@ declare global {
   }
 }
 
-type VisualizerMode = 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'waveform' | 'waveform-bars' | 'waveform-glow' | 'waveform-bands'
+type VisualizerMode =
+  | 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'spectrum-circular'
+  | 'waveform' | 'waveform-bars' | 'waveform-glow' | 'waveform-bands' | 'waveform-filled'
+  | 'spectrogram' | 'energy-bars' | 'beat-pulse' | 'particles' | 'plasma' | 'terrain'
 
 interface Settings {
   position: string
@@ -58,10 +69,18 @@ class AudioVisualizerApp {
   private spectrumVisualizer: SpectrumVisualizer | null = null
   private spectrumCellsVisualizer: SpectrumCellsVisualizer | null = null
   private spectrumBarsVisualizer: SpectrumBarsVisualizer | null = null
+  private spectrumCircularVisualizer: SpectrumCircularVisualizer | null = null
   private waveformVisualizer: WaveformVisualizer | null = null
   private waveformBarsVisualizer: WaveformBarsVisualizer | null = null
   private waveformGlowVisualizer: WaveformGlowVisualizer | null = null
   private waveformBandsVisualizer: WaveformBandsVisualizer | null = null
+  private waveformFilledVisualizer: WaveformFilledVisualizer | null = null
+  private spectrogramVisualizer: SpectrogramVisualizer | null = null
+  private energyBarsVisualizer: EnergyBarsVisualizer | null = null
+  private beatPulseVisualizer: BeatPulseVisualizer | null = null
+  private particlesVisualizer: ParticlesVisualizer | null = null
+  private plasmaVisualizer: PlasmaVisualizer | null = null
+  private terrainVisualizer: TerrainVisualizer | null = null
 
   private currentMode: VisualizerMode = 'spectrum'
   private currentPosition: EdgePosition = 'bottom'
@@ -129,15 +148,27 @@ class AudioVisualizerApp {
     })
 
     window.electronAPI.onOpacityChanged((opacity) => {
+      if (this.settings) {
+        this.settings.opacity = opacity
+      }
       document.body.style.opacity = String(opacity)
     })
 
     window.electronAPI.onPositionChanged((position) => {
       this.currentPosition = position as EdgePosition
+      if (this.settings) {
+        this.settings.position = position
+      }
       this.applyRotation(this.currentPosition)
+      // Reinitialize visualizer to handle dimension changes properly
+      this.destroyAllVisualizers()
+      this.initVisualizer()
     })
 
     window.electronAPI.onColorSchemeChanged((scheme) => {
+      if (this.settings) {
+        this.settings.colorScheme = scheme
+      }
       this.setColorScheme(scheme)
     })
 
@@ -162,6 +193,9 @@ class AudioVisualizerApp {
     if (this.spectrumBarsVisualizer) {
       this.spectrumBarsVisualizer.setColorScheme(scheme)
     }
+    if (this.spectrumCircularVisualizer) {
+      this.spectrumCircularVisualizer.setColorScheme(scheme)
+    }
     if (this.waveformVisualizer) {
       this.waveformVisualizer.setColor(color)
       this.waveformVisualizer.setGlowColor(color)
@@ -174,6 +208,27 @@ class AudioVisualizerApp {
     }
     if (this.waveformBandsVisualizer) {
       this.waveformBandsVisualizer.setColorScheme(scheme)
+    }
+    if (this.waveformFilledVisualizer) {
+      this.waveformFilledVisualizer.setColorScheme(scheme)
+    }
+    if (this.spectrogramVisualizer) {
+      this.spectrogramVisualizer.setColorScheme(scheme)
+    }
+    if (this.energyBarsVisualizer) {
+      this.energyBarsVisualizer.setColorScheme(scheme)
+    }
+    if (this.beatPulseVisualizer) {
+      this.beatPulseVisualizer.setColorScheme(scheme)
+    }
+    if (this.particlesVisualizer) {
+      this.particlesVisualizer.setColorScheme(scheme)
+    }
+    if (this.plasmaVisualizer) {
+      this.plasmaVisualizer.setColorScheme(scheme)
+    }
+    if (this.terrainVisualizer) {
+      this.terrainVisualizer.setColorScheme(scheme)
     }
   }
 
@@ -283,6 +338,73 @@ class AudioVisualizerApp {
         })
         this.waveformBandsVisualizer.init(this.audioCapture.analyser)
         break
+
+      case 'spectrum-circular':
+        this.spectrumCircularVisualizer = new SpectrumCircularVisualizer({
+          container: this.container,
+          barCount: Math.min(density, 180),
+          colorScheme: colorScheme
+        })
+        this.spectrumCircularVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'waveform-filled':
+        this.waveformFilledVisualizer = new WaveformFilledVisualizer({
+          container: this.container,
+          colorScheme: colorScheme
+        })
+        this.waveformFilledVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'spectrogram':
+        this.spectrogramVisualizer = new SpectrogramVisualizer({
+          container: this.container,
+          colorScheme: colorScheme
+        })
+        this.spectrogramVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'energy-bars':
+        this.energyBarsVisualizer = new EnergyBarsVisualizer({
+          container: this.container,
+          colorScheme: colorScheme,
+          barCount: Math.max(4, Math.floor(density / 16))
+        })
+        this.energyBarsVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'beat-pulse':
+        this.beatPulseVisualizer = new BeatPulseVisualizer({
+          container: this.container,
+          colorScheme: colorScheme
+        })
+        this.beatPulseVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'particles':
+        this.particlesVisualizer = new ParticlesVisualizer({
+          container: this.container,
+          colorScheme: colorScheme,
+          maxParticles: density * 2
+        })
+        this.particlesVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'plasma':
+        this.plasmaVisualizer = new PlasmaVisualizer({
+          container: this.container,
+          colorScheme: colorScheme
+        })
+        this.plasmaVisualizer.init(this.audioCapture.analyser)
+        break
+
+      case 'terrain':
+        this.terrainVisualizer = new TerrainVisualizer({
+          container: this.container,
+          colorScheme: colorScheme
+        })
+        this.terrainVisualizer.init(this.audioCapture.analyser)
+        break
     }
   }
 
@@ -309,6 +431,10 @@ class AudioVisualizerApp {
       this.spectrumBarsVisualizer.destroy()
       this.spectrumBarsVisualizer = null
     }
+    if (this.spectrumCircularVisualizer) {
+      this.spectrumCircularVisualizer.destroy()
+      this.spectrumCircularVisualizer = null
+    }
     if (this.waveformVisualizer) {
       this.waveformVisualizer.destroy()
       this.waveformVisualizer = null
@@ -324,6 +450,34 @@ class AudioVisualizerApp {
     if (this.waveformBandsVisualizer) {
       this.waveformBandsVisualizer.destroy()
       this.waveformBandsVisualizer = null
+    }
+    if (this.waveformFilledVisualizer) {
+      this.waveformFilledVisualizer.destroy()
+      this.waveformFilledVisualizer = null
+    }
+    if (this.spectrogramVisualizer) {
+      this.spectrogramVisualizer.destroy()
+      this.spectrogramVisualizer = null
+    }
+    if (this.energyBarsVisualizer) {
+      this.energyBarsVisualizer.destroy()
+      this.energyBarsVisualizer = null
+    }
+    if (this.beatPulseVisualizer) {
+      this.beatPulseVisualizer.destroy()
+      this.beatPulseVisualizer = null
+    }
+    if (this.particlesVisualizer) {
+      this.particlesVisualizer.destroy()
+      this.particlesVisualizer = null
+    }
+    if (this.plasmaVisualizer) {
+      this.plasmaVisualizer.destroy()
+      this.plasmaVisualizer = null
+    }
+    if (this.terrainVisualizer) {
+      this.terrainVisualizer.destroy()
+      this.terrainVisualizer = null
     }
   }
 

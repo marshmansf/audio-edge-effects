@@ -105,67 +105,108 @@ export function updateTrayMenu(): void {
       submenu: [
         {
           label: 'Spectrum',
-          type: 'radio',
-          checked: settings.visualizerMode === 'spectrum',
-          click: () => {
-            setSetting('visualizerMode', 'spectrum')
-            notifyRenderer('visualizer-mode-changed', 'spectrum')
-          }
+          submenu: [
+            {
+              label: 'Spectrum',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum',
+              click: () => setVisualizerMode('spectrum')
+            },
+            {
+              label: 'Spectrum Cells',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-cells',
+              click: () => setVisualizerMode('spectrum-cells')
+            },
+            {
+              label: 'Spectrum Bars',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-bars',
+              click: () => setVisualizerMode('spectrum-bars')
+            },
+            {
+              label: 'Spectrum Circular',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-circular',
+              click: () => setVisualizerMode('spectrum-circular')
+            }
+          ]
         },
-        {
-          label: 'Spectrum Cells',
-          type: 'radio',
-          checked: settings.visualizerMode === 'spectrum-cells',
-          click: () => {
-            setSetting('visualizerMode', 'spectrum-cells')
-            notifyRenderer('visualizer-mode-changed', 'spectrum-cells')
-          }
-        },
-        {
-          label: 'Spectrum Bars',
-          type: 'radio',
-          checked: settings.visualizerMode === 'spectrum-bars',
-          click: () => {
-            setSetting('visualizerMode', 'spectrum-bars')
-            notifyRenderer('visualizer-mode-changed', 'spectrum-bars')
-          }
-        },
-        { type: 'separator' },
         {
           label: 'Waveform',
-          type: 'radio',
-          checked: settings.visualizerMode === 'waveform',
-          click: () => {
-            setSetting('visualizerMode', 'waveform')
-            notifyRenderer('visualizer-mode-changed', 'waveform')
-          }
+          submenu: [
+            {
+              label: 'Waveform',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform',
+              click: () => setVisualizerMode('waveform')
+            },
+            {
+              label: 'Waveform Bars',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-bars',
+              click: () => setVisualizerMode('waveform-bars')
+            },
+            {
+              label: 'Waveform Glow',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-glow',
+              click: () => setVisualizerMode('waveform-glow')
+            },
+            {
+              label: 'Waveform Bands',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-bands',
+              click: () => setVisualizerMode('waveform-bands')
+            },
+            {
+              label: 'Waveform Filled',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-filled',
+              click: () => setVisualizerMode('waveform-filled')
+            }
+          ]
         },
         {
-          label: 'Waveform Bars',
-          type: 'radio',
-          checked: settings.visualizerMode === 'waveform-bars',
-          click: () => {
-            setSetting('visualizerMode', 'waveform-bars')
-            notifyRenderer('visualizer-mode-changed', 'waveform-bars')
-          }
-        },
-        {
-          label: 'Waveform Glow',
-          type: 'radio',
-          checked: settings.visualizerMode === 'waveform-glow',
-          click: () => {
-            setSetting('visualizerMode', 'waveform-glow')
-            notifyRenderer('visualizer-mode-changed', 'waveform-glow')
-          }
-        },
-        {
-          label: 'Waveform Bands',
-          type: 'radio',
-          checked: settings.visualizerMode === 'waveform-bands',
-          click: () => {
-            setSetting('visualizerMode', 'waveform-bands')
-            notifyRenderer('visualizer-mode-changed', 'waveform-bands')
-          }
+          label: 'Effects',
+          submenu: [
+            {
+              label: 'Spectrogram',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrogram',
+              click: () => setVisualizerMode('spectrogram')
+            },
+            {
+              label: 'Energy Bars',
+              type: 'radio',
+              checked: settings.visualizerMode === 'energy-bars',
+              click: () => setVisualizerMode('energy-bars')
+            },
+            {
+              label: 'Beat Pulse',
+              type: 'radio',
+              checked: settings.visualizerMode === 'beat-pulse',
+              click: () => setVisualizerMode('beat-pulse')
+            },
+            {
+              label: 'Particles',
+              type: 'radio',
+              checked: settings.visualizerMode === 'particles',
+              click: () => setVisualizerMode('particles')
+            },
+            {
+              label: 'Plasma',
+              type: 'radio',
+              checked: settings.visualizerMode === 'plasma',
+              click: () => setVisualizerMode('plasma')
+            },
+            {
+              label: 'Terrain',
+              type: 'radio',
+              checked: settings.visualizerMode === 'terrain',
+              click: () => setVisualizerMode('terrain')
+            }
+          ]
         }
       ]
     },
@@ -379,6 +420,12 @@ function setColorScheme(scheme: string): void {
 function setDensity(density: number): void {
   setSetting('density', density)
   notifyRenderer('density-changed', density)
+  updateTrayMenu()
+}
+
+function setVisualizerMode(mode: VisualizerMode): void {
+  setSetting('visualizerMode', mode)
+  notifyRenderer('visualizer-mode-changed', mode)
   updateTrayMenu()
 }
 
