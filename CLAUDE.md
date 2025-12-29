@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Audio Visualizer is an Electron-based desktop application that displays audio visualizations as a transparent edge overlay on macOS (with Windows support). It captures system audio via BlackHole virtual audio driver and renders WinAmp-inspired spectrum and waveform visualizations.
+Audio Edge Effects is an Electron-based desktop application that displays audio visualizations as a transparent edge overlay on macOS (with Windows support). It captures system audio via BlackHole virtual audio driver and renders WinAmp-inspired spectrum and waveform visualizations.
 
 ## Build & Development Commands
 

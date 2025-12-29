@@ -1,5 +1,5 @@
-appId: com.audiovisualizer.app
-productName: Audio Visualizer
+appId: com.audioedgeeffects.app
+productName: Audio Edge Effects
 directories:
   output: release
   buildResources: resources

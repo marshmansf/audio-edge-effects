@@ -49,7 +49,7 @@ export function createTray(): Tray {
   icon.setTemplateImage(true)
 
   tray = new Tray(icon)
-  tray.setToolTip('Audio Visualizer')
+  tray.setToolTip('Audio Edge Effects')
 
   updateTrayMenu()
 

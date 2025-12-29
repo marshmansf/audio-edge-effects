@@ -1,9 +1,9 @@
 {
-  "name": "audio-visualizer",
+  "name": "audio-edge-effects",
   "version": "1.0.0",
-  "description": "A WinAmp-inspired audio visualizer that displays as a transparent edge overlay",
+  "description": "Audio Edge Effects - A WinAmp-inspired audio visualizer that displays as a transparent edge overlay",
   "main": "dist/main/index.js",
-  "author": "Audio Visualizer",
+  "author": "Audio Edge Effects",
   "license": "MIT",
   "scripts": {
     "dev": "npm run build:main && concurrently --kill-others \"npm run dev:main\" \"npm run dev:renderer\" \"npm run dev:electron\"",
