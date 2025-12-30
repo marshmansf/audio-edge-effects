@@ -7,6 +7,7 @@
 export interface GlitchOptions {
   container: HTMLElement
   colorScheme?: string
+  intensity?: number
 }
 
 const colorSchemes: Record<string, { r: string, g: string, b: string }> = {
@@ -37,6 +38,7 @@ export class GlitchVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private intensity: number
   private glitchBlocks: GlitchBlock[] = []
   private lastBassEnergy: number = 0
   private rgbSplit: number = 0
@@ -54,6 +56,7 @@ export class GlitchVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.intensity = options.intensity || 50
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())

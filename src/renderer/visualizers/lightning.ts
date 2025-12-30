@@ -6,6 +6,7 @@
 export interface LightningOptions {
   container: HTMLElement
   colorScheme?: string
+  maxBolts?: number
 }
 
 const colorSchemes: Record<string, { bolt: string, glow: string, flash: string }> = {
@@ -34,6 +35,7 @@ export class LightningVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private maxBolts: number
   private bolts: LightningBolt[] = []
   private lastEnergy: number = 0
   private hue: number = 0
@@ -50,6 +52,7 @@ export class LightningVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.maxBolts = options.maxBolts || 5
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())

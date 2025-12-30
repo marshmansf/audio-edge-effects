@@ -6,6 +6,7 @@
 export interface SpectrumStackOptions {
   container: HTMLElement
   colorScheme?: string
+  resolution?: number
 }
 
 const colorSchemes: Record<string, { near: string, far: string, fill: string }> = {
@@ -26,6 +27,7 @@ export class SpectrumStackVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private resolution: number
   private history: number[][] = []
   private maxHistory: number = 20
   private hue: number = 0
@@ -41,6 +43,7 @@ export class SpectrumStackVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.resolution = options.resolution || 64
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -97,11 +100,10 @@ export class SpectrumStackVisualizer {
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
 
     // Sample current frequency data
-    const resolution = 64
     const currentSlice: number[] = []
-    const binSize = Math.floor(this.dataArray.length / resolution)
+    const binSize = Math.floor(this.dataArray.length / this.resolution)
 
-    for (let i = 0; i < resolution; i++) {
+    for (let i = 0; i < this.resolution; i++) {
       let sum = 0
       for (let j = 0; j < binSize; j++) {
         sum += this.dataArray[i * binSize + j]

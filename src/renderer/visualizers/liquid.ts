@@ -6,6 +6,7 @@
 export interface LiquidOptions {
   container: HTMLElement
   colorScheme?: string
+  resolution?: number
 }
 
 const colorSchemes: Record<string, { surface: string, deep: string, highlight: string }> = {
@@ -46,6 +47,7 @@ export class LiquidVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'blue'
+    this.resolution = options.resolution || 100
 
     this.initWater()
 

@@ -7,6 +7,7 @@
 export interface SpiralOptions {
   container: HTMLElement
   colorScheme?: string
+  pointCount?: number
 }
 
 const colorSchemes: Record<string, { primary: string, secondary: string }> = {
@@ -27,6 +28,7 @@ export class SpiralVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private pointCount: number
   private rotation: number = 0
   private hue: number = 0
 
@@ -41,6 +43,7 @@ export class SpiralVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.pointCount = options.pointCount || 500
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -96,13 +99,12 @@ export class SpiralVisualizer {
     // Spiral parameters - tighter when bass is heavy
     const spiralTightness = 0.15 - bassEnergy * 0.08
     const turns = 4 + bassEnergy * 2
-    const points = 500
 
     this.ctx.beginPath()
 
-    for (let i = 0; i < points; i++) {
-      const t = (i / points) * turns * Math.PI * 2
-      const progress = i / points
+    for (let i = 0; i < this.pointCount; i++) {
+      const t = (i / this.pointCount) * turns * Math.PI * 2
+      const progress = i / this.pointCount
 
       // Sample frequency data along the spiral
       const freqIndex = Math.floor(progress * this.dataArray.length * 0.5)

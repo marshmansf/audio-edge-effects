@@ -52,14 +52,38 @@ declare global {
     electronAPI: {
       getSettings: () => Promise<Settings>
       setSetting: (key: string, value: unknown) => Promise<boolean>
+      isDevMode: () => Promise<boolean>
       onVisualizerModeChanged: (callback: (mode: string) => void) => void
       onOpacityChanged: (callback: (opacity: number) => void) => void
       onPositionChanged: (callback: (position: string) => void) => void
       onColorSchemeChanged: (callback: (scheme: string) => void) => void
       onDensityChanged: (callback: (density: number) => void) => void
+      onDebugKeyboardShortcutsChanged: (callback: (enabled: boolean) => void) => void
     }
   }
 }
+
+// All visualizer modes in order for debug navigation
+const ALL_VISUALIZER_MODES: VisualizerMode[] = [
+  // Spectrum
+  'spectrum', 'spectrum-cells', 'spectrum-bars', 'spectrum-circular',
+  'spectrum-flame', 'spectrum-waterfall', 'spectrum-peaks', 'spectrum-stack',
+  // Waveform
+  'waveform', 'waveform-bars', 'waveform-glow', 'waveform-bands', 'waveform-filled',
+  'waveform-ribbon', 'waveform-lissajous', 'waveform-phase',
+  // Effects
+  'spectrogram', 'energy-bars', 'beat-pulse', 'particles', 'plasma', 'terrain',
+  // Geometric
+  'polygon-morph', 'spiral', 'hexagon-grid', 'constellation', 'mandala',
+  // Physics
+  'bouncing-balls', 'pendulum-wave', 'string-vibration', 'liquid', 'gravity-wells',
+  // Organic
+  'breathing-circle', 'tree-branches', 'lightning', 'fire', 'smoke-mist',
+  // Retro
+  'vu-meters', 'led-matrix', 'oscilloscope-crt', 'neon-signs', 'ascii-art',
+  // Abstract
+  'noise-field', 'color-field', 'glitch', 'moire'
+]
 
 type VisualizerMode =
   // Spectrum
@@ -90,6 +114,7 @@ interface Settings {
   colorScheme: string
   density: number
   showPeaks: boolean
+  debugKeyboardShortcuts: boolean
 }
 
 type EdgePosition = 'top' | 'bottom' | 'left' | 'right'
@@ -170,6 +195,8 @@ class AudioVisualizerApp {
   private currentMode: VisualizerMode = 'spectrum'
   private currentPosition: EdgePosition = 'bottom'
   private settings: Settings | null = null
+  private isDevMode: boolean = false
+  private keyboardHandler: ((e: KeyboardEvent) => void) | null = null
 
   constructor() {
     this.container = document.getElementById('visualizer-container')!
@@ -186,8 +213,14 @@ class AudioVisualizerApp {
       this.currentMode = this.settings.visualizerMode
       this.currentPosition = this.settings.position as EdgePosition
 
+      // Check if in dev mode
+      this.isDevMode = await window.electronAPI.isDevMode()
+
       // Set up IPC listeners
       this.setupIPCListeners()
+
+      // Set up debug keyboard shortcuts if enabled
+      this.setupDebugKeyboardShortcuts()
 
       // Apply initial rotation
       this.applyRotation(this.currentPosition)
@@ -264,6 +297,60 @@ class AudioVisualizerApp {
       this.destroyAllVisualizers()
       this.initVisualizer()
     })
+
+    window.electronAPI.onDebugKeyboardShortcutsChanged((enabled) => {
+      if (this.settings) {
+        this.settings.debugKeyboardShortcuts = enabled
+      }
+      this.setupDebugKeyboardShortcuts()
+    })
+  }
+
+  private setupDebugKeyboardShortcuts(): void {
+    // Remove any existing handler
+    if (this.keyboardHandler) {
+      window.removeEventListener('keydown', this.keyboardHandler)
+      this.keyboardHandler = null
+    }
+
+    // Only set up if in dev mode AND setting is enabled
+    if (!this.isDevMode || !this.settings?.debugKeyboardShortcuts) {
+      return
+    }
+
+    this.keyboardHandler = (e: KeyboardEvent) => {
+      // Use bracket keys for navigation (avoid arrow keys which might conflict)
+      if (e.key === ']' || e.key === 'ArrowRight') {
+        e.preventDefault()
+        this.navigateToNextVisualizer()
+      } else if (e.key === '[' || e.key === 'ArrowLeft') {
+        e.preventDefault()
+        this.navigateToPreviousVisualizer()
+      }
+    }
+
+    window.addEventListener('keydown', this.keyboardHandler)
+    console.log('Debug keyboard shortcuts enabled: [ for previous, ] for next')
+  }
+
+  private navigateToNextVisualizer(): void {
+    const currentIndex = ALL_VISUALIZER_MODES.indexOf(this.currentMode)
+    const nextIndex = (currentIndex + 1) % ALL_VISUALIZER_MODES.length
+    const nextMode = ALL_VISUALIZER_MODES[nextIndex]
+    console.log(`Switching to: ${nextMode} (${nextIndex + 1}/${ALL_VISUALIZER_MODES.length})`)
+    this.switchMode(nextMode)
+    // Also save the setting
+    window.electronAPI.setSetting('visualizerMode', nextMode)
+  }
+
+  private navigateToPreviousVisualizer(): void {
+    const currentIndex = ALL_VISUALIZER_MODES.indexOf(this.currentMode)
+    const prevIndex = (currentIndex - 1 + ALL_VISUALIZER_MODES.length) % ALL_VISUALIZER_MODES.length
+    const prevMode = ALL_VISUALIZER_MODES[prevIndex]
+    console.log(`Switching to: ${prevMode} (${prevIndex + 1}/${ALL_VISUALIZER_MODES.length})`)
+    this.switchMode(prevMode)
+    // Also save the setting
+    window.electronAPI.setSetting('visualizerMode', prevMode)
   }
 
   private setColorScheme(scheme: string): void {
@@ -604,7 +691,8 @@ class AudioVisualizerApp {
       case 'spectrum-waterfall':
         this.spectrumWaterfallVisualizer = new SpectrumWaterfallVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          resolution: density
         })
         this.spectrumWaterfallVisualizer.init(this.audioCapture.analyser)
         break
@@ -621,7 +709,8 @@ class AudioVisualizerApp {
       case 'spectrum-stack':
         this.spectrumStackVisualizer = new SpectrumStackVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          resolution: density
         })
         this.spectrumStackVisualizer.init(this.audioCapture.analyser)
         break
@@ -630,7 +719,8 @@ class AudioVisualizerApp {
       case 'waveform-ribbon':
         this.waveformRibbonVisualizer = new WaveformRibbonVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          ribbonCount: Math.max(5, Math.floor(density / 6))
         })
         this.waveformRibbonVisualizer.init(this.audioCapture.analyser)
         break
@@ -638,7 +728,8 @@ class AudioVisualizerApp {
       case 'waveform-lissajous':
         this.waveformLissajousVisualizer = new WaveformLissajousVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          detail: Math.max(1, Math.floor(density / 20))
         })
         this.waveformLissajousVisualizer.init(this.audioCapture.analyser)
         break
@@ -646,7 +737,8 @@ class AudioVisualizerApp {
       case 'waveform-phase':
         this.waveformPhaseVisualizer = new WaveformPhaseVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          bandCount: Math.max(3, Math.floor(density / 10))
         })
         this.waveformPhaseVisualizer.init(this.audioCapture.analyser)
         break
@@ -655,7 +747,8 @@ class AudioVisualizerApp {
       case 'polygon-morph':
         this.polygonMorphVisualizer = new PolygonMorphVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          ringCount: Math.max(2, Math.floor(density / 16))
         })
         this.polygonMorphVisualizer.init(this.audioCapture.analyser)
         break
@@ -663,7 +756,8 @@ class AudioVisualizerApp {
       case 'spiral':
         this.spiralVisualizer = new SpiralVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          pointCount: density * 8
         })
         this.spiralVisualizer.init(this.audioCapture.analyser)
         break
@@ -671,7 +765,8 @@ class AudioVisualizerApp {
       case 'hexagon-grid':
         this.hexagonGridVisualizer = new HexagonGridVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          hexSize: Math.max(10, 40 - density / 4)
         })
         this.hexagonGridVisualizer.init(this.audioCapture.analyser)
         break
@@ -679,7 +774,8 @@ class AudioVisualizerApp {
       case 'constellation':
         this.constellationVisualizer = new ConstellationVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          starCount: density
         })
         this.constellationVisualizer.init(this.audioCapture.analyser)
         break
@@ -687,7 +783,8 @@ class AudioVisualizerApp {
       case 'mandala':
         this.mandalaVisualizer = new MandalaVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          symmetry: Math.max(4, Math.floor(density / 8))
         })
         this.mandalaVisualizer.init(this.audioCapture.analyser)
         break
@@ -696,7 +793,8 @@ class AudioVisualizerApp {
       case 'bouncing-balls':
         this.bouncingBallsVisualizer = new BouncingBallsVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          maxBalls: Math.max(10, density)
         })
         this.bouncingBallsVisualizer.init(this.audioCapture.analyser)
         break
@@ -704,7 +802,8 @@ class AudioVisualizerApp {
       case 'pendulum-wave':
         this.pendulumWaveVisualizer = new PendulumWaveVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          pendulumCount: Math.max(8, Math.floor(density / 4))
         })
         this.pendulumWaveVisualizer.init(this.audioCapture.analyser)
         break
@@ -712,7 +811,8 @@ class AudioVisualizerApp {
       case 'string-vibration':
         this.stringVibrationVisualizer = new StringVibrationVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          stringCount: Math.max(3, Math.floor(density / 10))
         })
         this.stringVibrationVisualizer.init(this.audioCapture.analyser)
         break
@@ -720,7 +820,8 @@ class AudioVisualizerApp {
       case 'liquid':
         this.liquidVisualizer = new LiquidVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          resolution: density
         })
         this.liquidVisualizer.init(this.audioCapture.analyser)
         break
@@ -728,7 +829,8 @@ class AudioVisualizerApp {
       case 'gravity-wells':
         this.gravityWellsVisualizer = new GravityWellsVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          maxParticles: density * 5
         })
         this.gravityWellsVisualizer.init(this.audioCapture.analyser)
         break
@@ -737,7 +839,8 @@ class AudioVisualizerApp {
       case 'breathing-circle':
         this.breathingCircleVisualizer = new BreathingCircleVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          tentacleCount: density
         })
         this.breathingCircleVisualizer.init(this.audioCapture.analyser)
         break
@@ -745,7 +848,8 @@ class AudioVisualizerApp {
       case 'tree-branches':
         this.treeBranchesVisualizer = new TreeBranchesVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          maxDepth: Math.max(4, Math.floor(density / 8))
         })
         this.treeBranchesVisualizer.init(this.audioCapture.analyser)
         break
@@ -753,7 +857,8 @@ class AudioVisualizerApp {
       case 'lightning':
         this.lightningVisualizer = new LightningVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          maxBolts: Math.max(2, Math.floor(density / 10))
         })
         this.lightningVisualizer.init(this.audioCapture.analyser)
         break
@@ -761,7 +866,8 @@ class AudioVisualizerApp {
       case 'fire':
         this.fireVisualizer = new FireVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          maxParticles: density * 4
         })
         this.fireVisualizer.init(this.audioCapture.analyser)
         break
@@ -769,7 +875,8 @@ class AudioVisualizerApp {
       case 'smoke-mist':
         this.smokeMistVisualizer = new SmokeMistVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          maxParticles: density * 3
         })
         this.smokeMistVisualizer.init(this.audioCapture.analyser)
         break
@@ -803,7 +910,8 @@ class AudioVisualizerApp {
       case 'neon-signs':
         this.neonSignsVisualizer = new NeonSignsVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          tubeCount: Math.max(3, Math.floor(density / 10))
         })
         this.neonSignsVisualizer.init(this.audioCapture.analyser)
         break
@@ -811,7 +919,8 @@ class AudioVisualizerApp {
       case 'ascii-art':
         this.asciiArtVisualizer = new AsciiArtVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          cols: density
         })
         this.asciiArtVisualizer.init(this.audioCapture.analyser)
         break
@@ -820,7 +929,8 @@ class AudioVisualizerApp {
       case 'noise-field':
         this.noiseFieldVisualizer = new NoiseFieldVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          scale: Math.max(20, 100 - density)
         })
         this.noiseFieldVisualizer.init(this.audioCapture.analyser)
         break
@@ -836,7 +946,8 @@ class AudioVisualizerApp {
       case 'glitch':
         this.glitchVisualizer = new GlitchVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          intensity: density
         })
         this.glitchVisualizer.init(this.audioCapture.analyser)
         break
@@ -844,7 +955,8 @@ class AudioVisualizerApp {
       case 'moire':
         this.moireVisualizer = new MoireVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          lineCount: density
         })
         this.moireVisualizer.init(this.audioCapture.analyser)
         break

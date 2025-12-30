@@ -6,6 +6,7 @@
 export interface SmokeMistOptions {
   container: HTMLElement
   colorScheme?: string
+  maxParticles?: number
 }
 
 const colorSchemes: Record<string, { smoke: string, highlight: string }> = {
@@ -39,6 +40,7 @@ export class SmokeMistVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private maxParticles: number
   private particles: SmokeParticle[] = []
   private time: number = 0
   private hue: number = 0
@@ -54,6 +56,7 @@ export class SmokeMistVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.maxParticles = options.maxParticles || 150
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())

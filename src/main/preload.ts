@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('set-setting', key, value),
+  isDevMode: () => ipcRenderer.invoke('is-dev-mode'),
 
   onVisualizerModeChanged: (callback: (mode: string) => void) => {
     ipcRenderer.on('visualizer-mode-changed', (_event, mode) => callback(mode))
@@ -22,5 +23,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onDensityChanged: (callback: (density: number) => void) => {
     ipcRenderer.on('density-changed', (_event, density) => callback(density))
+  },
+
+  onDebugKeyboardShortcutsChanged: (callback: (enabled: boolean) => void) => {
+    ipcRenderer.on('debug-keyboard-shortcuts-changed', (_event, enabled) => callback(enabled))
   }
 })

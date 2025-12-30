@@ -6,6 +6,7 @@
 export interface NeonSignsOptions {
   container: HTMLElement
   colorScheme?: string
+  tubeCount?: number
 }
 
 const colorSchemes: Record<string, string[]> = {
@@ -34,6 +35,7 @@ export class NeonSignsVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private tubeCount: number
   private tubes: NeonTube[] = []
   private hue: number = 0
   private time: number = 0
@@ -49,6 +51,7 @@ export class NeonSignsVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.tubeCount = options.tubeCount || 5
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -72,10 +75,8 @@ export class NeonSignsVisualizer {
     this.tubes = []
 
     // Create wave tubes at different heights
-    const tubeCount = 5
-
-    for (let t = 0; t < tubeCount; t++) {
-      const baseY = height * (0.2 + (t / tubeCount) * 0.6)
+    for (let t = 0; t < this.tubeCount; t++) {
+      const baseY = height * (0.2 + (t / this.tubeCount) * 0.6)
       const points: { x: number, y: number }[] = []
 
       // Generate wavy path

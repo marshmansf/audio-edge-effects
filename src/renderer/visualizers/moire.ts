@@ -7,6 +7,7 @@
 export interface MoireOptions {
   container: HTMLElement
   colorScheme?: string
+  lineCount?: number
 }
 
 const colorSchemes: Record<string, { lines1: string, lines2: string }> = {
@@ -27,6 +28,7 @@ export class MoireVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private lineCount: number
   private rotation1: number = 0
   private rotation2: number = 0
   private spacing1: number = 10
@@ -44,6 +46,7 @@ export class MoireVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.lineCount = options.lineCount || 50
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())

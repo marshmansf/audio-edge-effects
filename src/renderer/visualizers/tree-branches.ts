@@ -6,6 +6,7 @@
 export interface TreeBranchesOptions {
   container: HTMLElement
   colorScheme?: string
+  maxDepth?: number
 }
 
 const colorSchemes: Record<string, { trunk: string, branch: string, leaf: string }> = {
@@ -26,6 +27,7 @@ export class TreeBranchesVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private maxDepth: number
   private time: number = 0
   private hue: number = 0
 
@@ -40,6 +42,7 @@ export class TreeBranchesVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.maxDepth = options.maxDepth || 8
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -206,7 +209,7 @@ export class TreeBranchesVisualizer {
     const startX = width / 2
     const startY = height
     const trunkLength = height * 0.35 * (0.8 + bassEnergy * 0.3)
-    const maxDepth = 8 + Math.floor(midEnergy * 2)
+    const maxDepth = this.maxDepth + Math.floor(midEnergy * 2)
 
     // Draw the tree
     this.drawBranch(

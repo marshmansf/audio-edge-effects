@@ -6,6 +6,7 @@
 export interface NoiseFieldOptions {
   container: HTMLElement
   colorScheme?: string
+  scale?: number
 }
 
 const colorSchemes: Record<string, { primary: string, secondary: string }> = {
@@ -26,6 +27,7 @@ export class NoiseFieldVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private scale: number
   private time: number = 0
   private hue: number = 0
   private permutation: number[] = []
@@ -41,6 +43,7 @@ export class NoiseFieldVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.scale = options.scale || 50
 
     // Initialize permutation table for noise
     this.initPermutation()

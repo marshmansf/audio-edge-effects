@@ -6,6 +6,7 @@
 export interface AsciiArtOptions {
   container: HTMLElement
   colorScheme?: string
+  cols?: number
 }
 
 const colorSchemes: Record<string, string> = {
@@ -27,6 +28,7 @@ export class AsciiArtVisualizer {
   private animationId: number | null = null
   private colorScheme: string
   private asciiChars: string = ' .,:;!|\\/*+<>[]{}()#&%@$'
+  private baseCols: number
   private cols: number = 80
   private rows: number = 12
   private hue: number = 0
@@ -42,6 +44,7 @@ export class AsciiArtVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.baseCols = options.cols || 80
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -54,13 +57,13 @@ export class AsciiArtVisualizer {
       this.canvas.height = rect.height * window.devicePixelRatio
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
-      // Calculate optimal cols/rows based on size
+      // Calculate optimal cols/rows based on size and baseCols
       const width = rect.width
       const height = rect.height
-      const charWidth = 10
-      const charHeight = 16
+      const charWidth = width / this.baseCols
+      const charHeight = charWidth * 1.6
 
-      this.cols = Math.floor(width / charWidth)
+      this.cols = this.baseCols
       this.rows = Math.floor(height / charHeight)
     }
   }

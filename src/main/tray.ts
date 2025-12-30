@@ -601,6 +601,15 @@ export function updateTrayMenu(): void {
       ]
     },
     { type: 'separator' },
+    ...(process.env.NODE_ENV === 'development' ? [
+      {
+        label: 'Debug Keyboard Shortcuts',
+        type: 'checkbox' as const,
+        checked: settings.debugKeyboardShortcuts,
+        click: () => toggleDebugKeyboardShortcuts()
+      },
+      { type: 'separator' as const }
+    ] : []),
     {
       label: 'Quit',
       click: () => {
@@ -639,6 +648,19 @@ function setDensity(density: number): void {
 function setVisualizerMode(mode: VisualizerMode): void {
   setSetting('visualizerMode', mode)
   notifyRenderer('visualizer-mode-changed', mode)
+  updateTrayMenu()
+}
+
+function toggleDebugKeyboardShortcuts(): void {
+  const settings = getSettings()
+  const newValue = !settings.debugKeyboardShortcuts
+  setSetting('debugKeyboardShortcuts', newValue)
+  notifyRenderer('debug-keyboard-shortcuts-changed', newValue)
+
+  // Update global shortcuts
+  const { updateDebugShortcuts } = require('./index')
+  updateDebugShortcuts()
+
   updateTrayMenu()
 }
 

@@ -7,6 +7,7 @@
 export interface SpectrumWaterfallOptions {
   container: HTMLElement
   colorScheme?: string
+  resolution?: number
 }
 
 const colorSchemes: Record<string, { low: string, mid: string, high: string }> = {
@@ -29,6 +30,7 @@ export class SpectrumWaterfallVisualizer {
   private colorScheme: string
   private history: number[][] = []
   private maxHistory: number = 60
+  private resolution: number
   private hue: number = 0
 
   constructor(options: SpectrumWaterfallOptions) {
@@ -42,6 +44,7 @@ export class SpectrumWaterfallVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.resolution = options.resolution || 128
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -124,11 +127,10 @@ export class SpectrumWaterfallVisualizer {
     this.ctx.clearRect(0, 0, width, height)
 
     // Sample frequency data
-    const resolution = 128
     const currentRow: number[] = []
-    const binSize = Math.floor(this.dataArray.length / resolution)
+    const binSize = Math.floor(this.dataArray.length / this.resolution)
 
-    for (let i = 0; i < resolution; i++) {
+    for (let i = 0; i < this.resolution; i++) {
       let sum = 0
       for (let j = 0; j < binSize; j++) {
         sum += this.dataArray[i * binSize + j]
@@ -143,7 +145,7 @@ export class SpectrumWaterfallVisualizer {
     }
 
     const rowHeight = height / this.maxHistory
-    const barWidth = width / resolution
+    const barWidth = width / this.resolution
 
     // Draw rows from newest (bottom) to oldest (top)
     for (let row = 0; row < this.history.length; row++) {

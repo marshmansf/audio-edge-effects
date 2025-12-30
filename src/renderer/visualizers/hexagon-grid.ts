@@ -7,6 +7,7 @@
 export interface HexagonGridOptions {
   container: HTMLElement
   colorScheme?: string
+  hexSize?: number
 }
 
 const colorSchemes: Record<string, { low: string, mid: string, high: string, bg: string }> = {
@@ -53,6 +54,7 @@ export class HexagonGridVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.hexSize = options.hexSize || 20
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())

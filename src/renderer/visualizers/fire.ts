@@ -6,6 +6,7 @@
 export interface FireOptions {
   container: HTMLElement
   colorScheme?: string
+  maxParticles?: number
 }
 
 const colorSchemes: Record<string, { core: string[], outer: string[], ember: string }> = {
@@ -37,6 +38,7 @@ export class FireVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private maxParticles: number
   private particles: FlameParticle[] = []
   private hue: number = 0
   private time: number = 0
@@ -52,6 +54,7 @@ export class FireVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'fire'
+    this.maxParticles = options.maxParticles || 200
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())

@@ -6,6 +6,7 @@
 export interface WaveformLissajousOptions {
   container: HTMLElement
   colorScheme?: string
+  detail?: number
 }
 
 const colorSchemes: Record<string, { primary: string, secondary: string }> = {
@@ -27,6 +28,7 @@ export class WaveformLissajousVisualizer {
   private freqData: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private detail: number
   private trailCanvas: HTMLCanvasElement
   private trailCtx: CanvasRenderingContext2D
   private phase: number = 0
@@ -49,6 +51,7 @@ export class WaveformLissajousVisualizer {
     this.trailCtx = trailCtx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.detail = options.detail || 2
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -112,7 +115,8 @@ export class WaveformLissajousVisualizer {
 
     // Draw connected line through all points
     let firstPoint = true
-    for (let i = 0; i < this.timeData.length; i += 2) {
+    const step = Math.max(1, Math.floor(6 - this.detail))
+    for (let i = 0; i < this.timeData.length; i += step) {
       const xIndex = i
       const yIndex = (i + offset) % this.timeData.length
 
@@ -162,7 +166,7 @@ export class WaveformLissajousVisualizer {
     // Actually redraw the path on trail canvas
     this.trailCtx.beginPath()
     firstPoint = true
-    for (let i = 0; i < this.timeData.length; i += 2) {
+    for (let i = 0; i < this.timeData.length; i += step) {
       const xIndex = i
       const yIndex = (i + offset) % this.timeData.length
 

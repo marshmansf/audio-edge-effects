@@ -7,6 +7,7 @@
 export interface PolygonMorphOptions {
   container: HTMLElement
   colorScheme?: string
+  ringCount?: number
 }
 
 const colorSchemes: Record<string, { stroke: string, fill: string, glow: string }> = {
@@ -27,6 +28,7 @@ export class PolygonMorphVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private ringCount: number
   private currentSides: number = 3
   private targetSides: number = 3
   private rotation: number = 0
@@ -45,6 +47,7 @@ export class PolygonMorphVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.ringCount = options.ringCount || 4
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -165,9 +168,8 @@ export class PolygonMorphVisualizer {
     const radius = baseRadius * (0.6 + bassEnergy * 0.6)
 
     // Draw multiple concentric rings
-    const rings = 4
-    for (let ring = rings - 1; ring >= 0; ring--) {
-      const ringRadius = radius * (0.3 + ring * 0.25)
+    for (let ring = this.ringCount - 1; ring >= 0; ring--) {
+      const ringRadius = radius * (0.3 + ring * (0.7 / this.ringCount))
       const ringSides = this.currentSides + ring * 0.3
       const ringRotation = this.rotation + (ring % 2 === 0 ? 1 : -1) * this.innerRotation
 
@@ -189,10 +191,10 @@ export class PolygonMorphVisualizer {
       }
 
       this.ctx.fillStyle = gradient
-      this.ctx.globalAlpha = 0.3 + (rings - ring) * 0.15
+      this.ctx.globalAlpha = 0.3 + (this.ringCount - ring) * (0.6 / this.ringCount)
       this.ctx.fill()
 
-      this.ctx.lineWidth = 1 + (rings - ring) * 0.5 + highEnergy * 2
+      this.ctx.lineWidth = 1 + (this.ringCount - ring) * (2 / this.ringCount) + highEnergy * 2
       this.ctx.shadowBlur = 10 + highEnergy * 15
       this.ctx.stroke()
     }
