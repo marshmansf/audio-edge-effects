@@ -129,6 +129,31 @@ export function updateTrayMenu(): void {
               type: 'radio',
               checked: settings.visualizerMode === 'spectrum-circular',
               click: () => setVisualizerMode('spectrum-circular')
+            },
+            { type: 'separator' },
+            {
+              label: 'Spectrum Flame',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-flame',
+              click: () => setVisualizerMode('spectrum-flame')
+            },
+            {
+              label: 'Spectrum Waterfall',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-waterfall',
+              click: () => setVisualizerMode('spectrum-waterfall')
+            },
+            {
+              label: 'Spectrum Peaks',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-peaks',
+              click: () => setVisualizerMode('spectrum-peaks')
+            },
+            {
+              label: 'Spectrum Stack',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spectrum-stack',
+              click: () => setVisualizerMode('spectrum-stack')
             }
           ]
         },
@@ -164,6 +189,25 @@ export function updateTrayMenu(): void {
               type: 'radio',
               checked: settings.visualizerMode === 'waveform-filled',
               click: () => setVisualizerMode('waveform-filled')
+            },
+            { type: 'separator' },
+            {
+              label: 'Waveform Ribbon',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-ribbon',
+              click: () => setVisualizerMode('waveform-ribbon')
+            },
+            {
+              label: 'Waveform Lissajous',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-lissajous',
+              click: () => setVisualizerMode('waveform-lissajous')
+            },
+            {
+              label: 'Waveform Phase',
+              type: 'radio',
+              checked: settings.visualizerMode === 'waveform-phase',
+              click: () => setVisualizerMode('waveform-phase')
             }
           ]
         },
@@ -205,6 +249,175 @@ export function updateTrayMenu(): void {
               type: 'radio',
               checked: settings.visualizerMode === 'terrain',
               click: () => setVisualizerMode('terrain')
+            }
+          ]
+        },
+        {
+          label: 'Geometric',
+          submenu: [
+            {
+              label: 'Polygon Morph',
+              type: 'radio',
+              checked: settings.visualizerMode === 'polygon-morph',
+              click: () => setVisualizerMode('polygon-morph')
+            },
+            {
+              label: 'Spiral',
+              type: 'radio',
+              checked: settings.visualizerMode === 'spiral',
+              click: () => setVisualizerMode('spiral')
+            },
+            {
+              label: 'Hexagon Grid',
+              type: 'radio',
+              checked: settings.visualizerMode === 'hexagon-grid',
+              click: () => setVisualizerMode('hexagon-grid')
+            },
+            {
+              label: 'Constellation',
+              type: 'radio',
+              checked: settings.visualizerMode === 'constellation',
+              click: () => setVisualizerMode('constellation')
+            },
+            {
+              label: 'Mandala',
+              type: 'radio',
+              checked: settings.visualizerMode === 'mandala',
+              click: () => setVisualizerMode('mandala')
+            }
+          ]
+        },
+        {
+          label: 'Physics',
+          submenu: [
+            {
+              label: 'Bouncing Balls',
+              type: 'radio',
+              checked: settings.visualizerMode === 'bouncing-balls',
+              click: () => setVisualizerMode('bouncing-balls')
+            },
+            {
+              label: 'Pendulum Wave',
+              type: 'radio',
+              checked: settings.visualizerMode === 'pendulum-wave',
+              click: () => setVisualizerMode('pendulum-wave')
+            },
+            {
+              label: 'String Vibration',
+              type: 'radio',
+              checked: settings.visualizerMode === 'string-vibration',
+              click: () => setVisualizerMode('string-vibration')
+            },
+            {
+              label: 'Liquid',
+              type: 'radio',
+              checked: settings.visualizerMode === 'liquid',
+              click: () => setVisualizerMode('liquid')
+            },
+            {
+              label: 'Gravity Wells',
+              type: 'radio',
+              checked: settings.visualizerMode === 'gravity-wells',
+              click: () => setVisualizerMode('gravity-wells')
+            }
+          ]
+        },
+        {
+          label: 'Organic',
+          submenu: [
+            {
+              label: 'Breathing Circle',
+              type: 'radio',
+              checked: settings.visualizerMode === 'breathing-circle',
+              click: () => setVisualizerMode('breathing-circle')
+            },
+            {
+              label: 'Tree Branches',
+              type: 'radio',
+              checked: settings.visualizerMode === 'tree-branches',
+              click: () => setVisualizerMode('tree-branches')
+            },
+            {
+              label: 'Lightning',
+              type: 'radio',
+              checked: settings.visualizerMode === 'lightning',
+              click: () => setVisualizerMode('lightning')
+            },
+            {
+              label: 'Fire',
+              type: 'radio',
+              checked: settings.visualizerMode === 'fire',
+              click: () => setVisualizerMode('fire')
+            },
+            {
+              label: 'Smoke Mist',
+              type: 'radio',
+              checked: settings.visualizerMode === 'smoke-mist',
+              click: () => setVisualizerMode('smoke-mist')
+            }
+          ]
+        },
+        {
+          label: 'Retro',
+          submenu: [
+            {
+              label: 'VU Meters',
+              type: 'radio',
+              checked: settings.visualizerMode === 'vu-meters',
+              click: () => setVisualizerMode('vu-meters')
+            },
+            {
+              label: 'LED Matrix',
+              type: 'radio',
+              checked: settings.visualizerMode === 'led-matrix',
+              click: () => setVisualizerMode('led-matrix')
+            },
+            {
+              label: 'Oscilloscope CRT',
+              type: 'radio',
+              checked: settings.visualizerMode === 'oscilloscope-crt',
+              click: () => setVisualizerMode('oscilloscope-crt')
+            },
+            {
+              label: 'Neon Signs',
+              type: 'radio',
+              checked: settings.visualizerMode === 'neon-signs',
+              click: () => setVisualizerMode('neon-signs')
+            },
+            {
+              label: 'ASCII Art',
+              type: 'radio',
+              checked: settings.visualizerMode === 'ascii-art',
+              click: () => setVisualizerMode('ascii-art')
+            }
+          ]
+        },
+        {
+          label: 'Abstract',
+          submenu: [
+            {
+              label: 'Noise Field',
+              type: 'radio',
+              checked: settings.visualizerMode === 'noise-field',
+              click: () => setVisualizerMode('noise-field')
+            },
+            {
+              label: 'Color Field',
+              type: 'radio',
+              checked: settings.visualizerMode === 'color-field',
+              click: () => setVisualizerMode('color-field')
+            },
+            {
+              label: 'Glitch',
+              type: 'radio',
+              checked: settings.visualizerMode === 'glitch',
+              click: () => setVisualizerMode('glitch')
+            },
+            {
+              label: 'Moire',
+              type: 'radio',
+              checked: settings.visualizerMode === 'moire',
+              click: () => setVisualizerMode('moire')
             }
           ]
         }

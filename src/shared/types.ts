@@ -1,9 +1,24 @@
 export type EdgePosition = 'top' | 'bottom' | 'left' | 'right'
 
 export type VisualizerMode =
+  // Spectrum
   | 'spectrum' | 'spectrum-cells' | 'spectrum-bars' | 'spectrum-circular'
+  | 'spectrum-flame' | 'spectrum-waterfall' | 'spectrum-peaks' | 'spectrum-stack'
+  // Waveform
   | 'waveform' | 'waveform-bars' | 'waveform-glow' | 'waveform-bands' | 'waveform-filled'
+  | 'waveform-ribbon' | 'waveform-lissajous' | 'waveform-phase'
+  // Effects
   | 'spectrogram' | 'energy-bars' | 'beat-pulse' | 'particles' | 'plasma' | 'terrain'
+  // Geometric
+  | 'polygon-morph' | 'spiral' | 'hexagon-grid' | 'constellation' | 'mandala'
+  // Physics
+  | 'bouncing-balls' | 'pendulum-wave' | 'string-vibration' | 'liquid' | 'gravity-wells'
+  // Organic
+  | 'breathing-circle' | 'tree-branches' | 'lightning' | 'fire' | 'smoke-mist'
+  // Retro
+  | 'vu-meters' | 'led-matrix' | 'oscilloscope-crt' | 'neon-signs' | 'ascii-art'
+  // Abstract
+  | 'noise-field' | 'color-field' | 'glitch' | 'moire'
 
 export interface Settings {
   position: EdgePosition
