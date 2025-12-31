@@ -4,6 +4,7 @@ import { getSettings, setSetting } from './store'
 import { EdgePosition } from '../shared/types'
 
 let mainWindow: BrowserWindow | null = null
+let settingsWindow: BrowserWindow | null = null
 let isVisible = true
 
 export function createWindow(): BrowserWindow {
@@ -112,4 +113,43 @@ export function getWindow(): BrowserWindow | null {
 
 export function isWindowVisible(): boolean {
   return isVisible
+}
+
+// Settings Window
+export function showSettingsWindow(): void {
+  if (settingsWindow) {
+    settingsWindow.focus()
+    return
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 420,
+    height: 480,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    title: 'Audio Edge Effects Settings',
+    backgroundColor: '#1a1a2e',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  })
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null
+  })
+
+  // Load the settings page
+  if (process.env.NODE_ENV === 'development') {
+    settingsWindow.loadURL('http://localhost:5173/settings.html')
+  } else {
+    settingsWindow.loadFile(path.join(__dirname, '../renderer/settings.html'))
+  }
+}
+
+export function getSettingsWindow(): BrowserWindow | null {
+  return settingsWindow
 }

@@ -75,6 +75,36 @@ ipcMain.handle('get-settings', () => {
 
 ipcMain.handle('set-setting', (_event, key: string, value: unknown) => {
   setSetting(key as keyof ReturnType<typeof getSettings>, value as never)
+
+  // Notify the main visualizer window of the change
+  const win = getWindow()
+  if (win) {
+    switch (key) {
+      case 'visualizerMode':
+        win.webContents.send('visualizer-mode-changed', value)
+        break
+      case 'opacity':
+        win.webContents.send('opacity-changed', value)
+        break
+      case 'position':
+        // Also update window position
+        const { setPosition } = require('./window')
+        setPosition(value as string)
+        break
+      case 'height':
+        // Also update window size
+        const { setHeight } = require('./window')
+        setHeight(value as number)
+        break
+      case 'colorScheme':
+        win.webContents.send('color-scheme-changed', value)
+        break
+      case 'density':
+        win.webContents.send('density-changed', value)
+        break
+    }
+  }
+
   return true
 })
 

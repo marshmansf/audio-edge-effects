@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>Audio Edge Effects Settings</title>
+  <link rel="stylesheet" href="./settings.css">
+</head>
+<body>
+  <div class="settings-container">
+    <h1>Settings</h1>
+
+    <section class="setting-group">
+      <label class="setting-label">Visualizer</label>
+      <select id="visualizer" class="select-input">
+        <optgroup label="Spectrum">
+          <option value="spectrum">Spectrum</option>
+          <option value="spectrum-cells">Spectrum Cells</option>
+          <option value="spectrum-bars">Spectrum Bars</option>
+          <option value="spectrum-circular">Spectrum Circular</option>
+          <option value="spectrum-flame">Spectrum Flame</option>
+          <option value="spectrum-waterfall">Spectrum Waterfall</option>
+          <option value="spectrum-peaks">Spectrum Peaks</option>
+          <option value="spectrum-stack">Spectrum Stack</option>
+        </optgroup>
+        <optgroup label="Waveform">
+          <option value="waveform">Waveform</option>
+          <option value="waveform-bars">Waveform Bars</option>
+          <option value="waveform-glow">Waveform Glow</option>
+          <option value="waveform-bands">Waveform Bands</option>
+          <option value="waveform-filled">Waveform Filled</option>
+          <option value="waveform-ribbon">Waveform Ribbon</option>
+          <option value="waveform-lissajous">Waveform Lissajous</option>
+          <option value="waveform-phase">Waveform Phase</option>
+        </optgroup>
+        <optgroup label="Effects">
+          <option value="spectrogram">Spectrogram</option>
+          <option value="energy-bars">Energy Bars</option>
+          <option value="beat-pulse">Beat Pulse</option>
+          <option value="particles">Particles</option>
+          <option value="plasma">Plasma</option>
+          <option value="terrain">Terrain</option>
+        </optgroup>
+        <optgroup label="Geometric">
+          <option value="polygon-morph">Polygon Morph</option>
+          <option value="spiral">Spiral</option>
+          <option value="hexagon-grid">Hexagon Grid</option>
+          <option value="constellation">Constellation</option>
+          <option value="mandala">Mandala</option>
+        </optgroup>
+        <optgroup label="Physics">
+          <option value="bouncing-balls">Bouncing Balls</option>
+          <option value="pendulum-wave">Pendulum Wave</option>
+          <option value="string-vibration">String Vibration</option>
+          <option value="liquid">Liquid</option>
+          <option value="gravity-wells">Gravity Wells</option>
+        </optgroup>
+        <optgroup label="Organic">
+          <option value="breathing-circle">Breathing Circle</option>
+          <option value="tree-branches">Tree Branches</option>
+          <option value="lightning">Lightning</option>
+          <option value="fire">Fire</option>
+          <option value="smoke-mist">Smoke Mist</option>
+        </optgroup>
+        <optgroup label="Retro">
+          <option value="vu-meters">VU Meters</option>
+          <option value="led-matrix">LED Matrix</option>
+          <option value="oscilloscope-crt">Oscilloscope CRT</option>
+          <option value="neon-signs">Neon Signs</option>
+          <option value="ascii-art">ASCII Art</option>
+        </optgroup>
+        <optgroup label="Abstract">
+          <option value="noise-field">Noise Field</option>
+          <option value="color-field">Color Field</option>
+          <option value="glitch">Glitch</option>
+          <option value="moire">Moire</option>
+        </optgroup>
+      </select>
+    </section>
+
+    <div class="setting-row">
+      <section class="setting-group half">
+        <label class="setting-label">Position</label>
+        <div class="button-grid position-grid">
+          <button class="toggle-btn" data-position="top">Top</button>
+          <button class="toggle-btn" data-position="bottom">Bottom</button>
+          <button class="toggle-btn" data-position="left">Left</button>
+          <button class="toggle-btn" data-position="right">Right</button>
+        </div>
+      </section>
+
+      <section class="setting-group half">
+        <label class="setting-label">Size</label>
+        <div class="button-grid size-grid">
+          <button class="toggle-btn" data-size="40">S</button>
+          <button class="toggle-btn" data-size="60">M</button>
+          <button class="toggle-btn" data-size="80">L</button>
+          <button class="toggle-btn" data-size="120">XL</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="setting-group">
+      <label class="setting-label">
+        Density
+        <span class="value-display" id="density-value">256</span>
+      </label>
+      <input type="range" id="density" class="slider" min="16" max="512" step="16" value="256">
+      <div class="slider-labels">
+        <span>Minimal</span>
+        <span>Maximum</span>
+      </div>
+    </section>
+
+    <section class="setting-group">
+      <label class="setting-label">
+        Opacity
+        <span class="value-display" id="opacity-value">85%</span>
+      </label>
+      <input type="range" id="opacity" class="slider" min="10" max="100" step="5" value="85">
+      <div class="slider-labels">
+        <span>10%</span>
+        <span>100%</span>
+      </div>
+    </section>
+
+    <section class="setting-group">
+      <label class="setting-label">Color Scheme</label>
+      <div class="color-grid">
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="classic">
+          <span class="color-preview classic"></span>
+          <span class="color-name">Classic</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="blue">
+          <span class="color-preview blue"></span>
+          <span class="color-name">Blue</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="purple">
+          <span class="color-preview purple"></span>
+          <span class="color-name">Purple</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="fire">
+          <span class="color-preview fire"></span>
+          <span class="color-name">Fire</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="ice">
+          <span class="color-preview ice"></span>
+          <span class="color-name">Ice</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="rainbow">
+          <span class="color-preview rainbow"></span>
+          <span class="color-name">Rainbow</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="light">
+          <span class="color-preview light"></span>
+          <span class="color-name">Light</span>
+        </label>
+        <label class="color-option">
+          <input type="radio" name="colorScheme" value="dark">
+          <span class="color-preview dark"></span>
+          <span class="color-name">Dark</span>
+        </label>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./settings.ts"></script>
+</body>
+</html>
