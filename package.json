@@ -1,7 +1,8 @@
 {
   "name": "audio-edge-effects",
   "version": "1.0.0",
-  "description": "Audio Edge Effects - A WinAmp-inspired audio visualizer that displays as a transparent edge overlay",
+  "productName": "Audio Edge Effects",
+  "description": "Real-time audio visualizations displayed as a transparent edge overlay on your desktop",
   "main": "dist/main/index.js",
   "author": "Audio Edge Effects",
   "license": "MIT",

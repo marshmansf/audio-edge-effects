@@ -61,7 +61,7 @@ export function updateTrayMenu(): void {
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: visible ? 'Hide Visualizer' : 'Show Visualizer',
+      label: visible ? 'Hide Audio Edge Effects' : 'Show Audio Edge Effects',
       click: () => {
         toggleVisibility()
         updateTrayMenu()
