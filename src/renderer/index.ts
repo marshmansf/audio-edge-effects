@@ -52,38 +52,14 @@ declare global {
     electronAPI: {
       getSettings: () => Promise<Settings>
       setSetting: (key: string, value: unknown) => Promise<boolean>
-      isDevMode: () => Promise<boolean>
       onVisualizerModeChanged: (callback: (mode: string) => void) => void
       onOpacityChanged: (callback: (opacity: number) => void) => void
       onPositionChanged: (callback: (position: string) => void) => void
       onColorSchemeChanged: (callback: (scheme: string) => void) => void
       onDensityChanged: (callback: (density: number) => void) => void
-      onDebugKeyboardShortcutsChanged: (callback: (enabled: boolean) => void) => void
     }
   }
 }
-
-// All visualizer modes in order for debug navigation
-const ALL_VISUALIZER_MODES: VisualizerMode[] = [
-  // Spectrum
-  'spectrum', 'spectrum-cells', 'spectrum-bars', 'spectrum-circular',
-  'spectrum-flame', 'spectrum-waterfall', 'spectrum-peaks', 'spectrum-stack',
-  // Waveform
-  'waveform', 'waveform-bars', 'waveform-glow', 'waveform-bands', 'waveform-filled',
-  'waveform-ribbon', 'waveform-lissajous', 'waveform-phase',
-  // Effects
-  'spectrogram', 'energy-bars', 'beat-pulse', 'particles', 'plasma', 'terrain',
-  // Geometric
-  'polygon-morph', 'spiral', 'hexagon-grid', 'constellation', 'mandala',
-  // Physics
-  'bouncing-balls', 'pendulum-wave', 'string-vibration', 'liquid', 'gravity-wells',
-  // Organic
-  'breathing-circle', 'tree-branches', 'lightning', 'fire', 'smoke-mist',
-  // Retro
-  'vu-meters', 'led-matrix', 'oscilloscope-crt', 'neon-signs', 'ascii-art',
-  // Abstract
-  'noise-field', 'color-field', 'glitch', 'moire'
-]
 
 type VisualizerMode =
   // Spectrum
@@ -114,7 +90,6 @@ interface Settings {
   colorScheme: string
   density: number
   showPeaks: boolean
-  debugKeyboardShortcuts: boolean
 }
 
 type EdgePosition = 'top' | 'bottom' | 'left' | 'right'
@@ -195,8 +170,6 @@ class AudioVisualizerApp {
   private currentMode: VisualizerMode = 'spectrum'
   private currentPosition: EdgePosition = 'bottom'
   private settings: Settings | null = null
-  private isDevMode: boolean = false
-  private keyboardHandler: ((e: KeyboardEvent) => void) | null = null
 
   constructor() {
     this.container = document.getElementById('visualizer-container')!
@@ -213,14 +186,8 @@ class AudioVisualizerApp {
       this.currentMode = this.settings.visualizerMode
       this.currentPosition = this.settings.position as EdgePosition
 
-      // Check if in dev mode
-      this.isDevMode = await window.electronAPI.isDevMode()
-
       // Set up IPC listeners
       this.setupIPCListeners()
-
-      // Set up debug keyboard shortcuts if enabled
-      this.setupDebugKeyboardShortcuts()
 
       // Apply initial rotation
       this.applyRotation(this.currentPosition)
@@ -297,60 +264,6 @@ class AudioVisualizerApp {
       this.destroyAllVisualizers()
       this.initVisualizer()
     })
-
-    window.electronAPI.onDebugKeyboardShortcutsChanged((enabled) => {
-      if (this.settings) {
-        this.settings.debugKeyboardShortcuts = enabled
-      }
-      this.setupDebugKeyboardShortcuts()
-    })
-  }
-
-  private setupDebugKeyboardShortcuts(): void {
-    // Remove any existing handler
-    if (this.keyboardHandler) {
-      window.removeEventListener('keydown', this.keyboardHandler)
-      this.keyboardHandler = null
-    }
-
-    // Only set up if in dev mode AND setting is enabled
-    if (!this.isDevMode || !this.settings?.debugKeyboardShortcuts) {
-      return
-    }
-
-    this.keyboardHandler = (e: KeyboardEvent) => {
-      // Use bracket keys for navigation (avoid arrow keys which might conflict)
-      if (e.key === ']' || e.key === 'ArrowRight') {
-        e.preventDefault()
-        this.navigateToNextVisualizer()
-      } else if (e.key === '[' || e.key === 'ArrowLeft') {
-        e.preventDefault()
-        this.navigateToPreviousVisualizer()
-      }
-    }
-
-    window.addEventListener('keydown', this.keyboardHandler)
-    console.log('Debug keyboard shortcuts enabled: [ for previous, ] for next')
-  }
-
-  private navigateToNextVisualizer(): void {
-    const currentIndex = ALL_VISUALIZER_MODES.indexOf(this.currentMode)
-    const nextIndex = (currentIndex + 1) % ALL_VISUALIZER_MODES.length
-    const nextMode = ALL_VISUALIZER_MODES[nextIndex]
-    console.log(`Switching to: ${nextMode} (${nextIndex + 1}/${ALL_VISUALIZER_MODES.length})`)
-    this.switchMode(nextMode)
-    // Also save the setting
-    window.electronAPI.setSetting('visualizerMode', nextMode)
-  }
-
-  private navigateToPreviousVisualizer(): void {
-    const currentIndex = ALL_VISUALIZER_MODES.indexOf(this.currentMode)
-    const prevIndex = (currentIndex - 1 + ALL_VISUALIZER_MODES.length) % ALL_VISUALIZER_MODES.length
-    const prevMode = ALL_VISUALIZER_MODES[prevIndex]
-    console.log(`Switching to: ${prevMode} (${prevIndex + 1}/${ALL_VISUALIZER_MODES.length})`)
-    this.switchMode(prevMode)
-    // Also save the setting
-    window.electronAPI.setSetting('visualizerMode', prevMode)
   }
 
   private setColorScheme(scheme: string): void {

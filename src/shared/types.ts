@@ -29,7 +29,6 @@ export interface Settings {
   colorScheme: string
   density: number
   showPeaks: boolean
-  debugKeyboardShortcuts: boolean
 }
 
 export const defaultSettings: Settings = {
@@ -40,8 +39,7 @@ export const defaultSettings: Settings = {
   audioDeviceId: null,
   colorScheme: 'classic',
   density: 256,
-  showPeaks: true,
-  debugKeyboardShortcuts: false
+  showPeaks: true
 }
 
 export interface AudioDevice {

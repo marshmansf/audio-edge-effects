@@ -17,7 +17,6 @@ interface Settings {
   colorScheme: string
   density: number
   showPeaks: boolean
-  debugKeyboardShortcuts: boolean
 }
 
 class SettingsUI {

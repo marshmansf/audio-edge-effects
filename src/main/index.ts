@@ -108,11 +108,7 @@ ipcMain.handle('set-setting', (_event, key: string, value: unknown) => {
   return true
 })
 
-ipcMain.handle('is-dev-mode', () => {
-  return process.env.NODE_ENV === 'development'
-})
-
-// Debug keyboard shortcuts (global shortcuts)
+// Debug keyboard shortcuts (global shortcuts, dev mode only)
 function navigateVisualizer(direction: 'next' | 'prev'): void {
   const settings = getSettings()
   const currentIndex = ALL_VISUALIZER_MODES.indexOf(settings.visualizerMode)
@@ -137,12 +133,9 @@ function navigateVisualizer(direction: 'next' | 'prev'): void {
   updateTrayMenu()
 }
 
-export function registerDebugShortcuts(): void {
+function registerDebugShortcuts(): void {
   // Only register in dev mode
   if (process.env.NODE_ENV !== 'development') return
-
-  const settings = getSettings()
-  if (!settings.debugKeyboardShortcuts) return
 
   // Use Ctrl+] for next and Ctrl+[ for previous
   globalShortcut.register('CommandOrControl+]', () => {
@@ -153,16 +146,5 @@ export function registerDebugShortcuts(): void {
     navigateVisualizer('prev')
   })
 
-  console.log('Debug keyboard shortcuts registered: Ctrl+[ for previous, Ctrl+] for next')
-}
-
-export function unregisterDebugShortcuts(): void {
-  globalShortcut.unregister('CommandOrControl+]')
-  globalShortcut.unregister('CommandOrControl+[')
-  console.log('Debug keyboard shortcuts unregistered')
-}
-
-export function updateDebugShortcuts(): void {
-  unregisterDebugShortcuts()
-  registerDebugShortcuts()
+  console.log('Debug keyboard shortcuts registered: Cmd+[ for previous, Cmd+] for next')
 }

@@ -14,8 +14,7 @@ export function getSettings(): Settings {
     audioDeviceId: store.get('audioDeviceId'),
     colorScheme: store.get('colorScheme'),
     density: store.get('density'),
-    showPeaks: store.get('showPeaks'),
-    debugKeyboardShortcuts: store.get('debugKeyboardShortcuts')
+    showPeaks: store.get('showPeaks')
   }
 }
 

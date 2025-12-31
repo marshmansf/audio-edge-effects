@@ -1,6 +1,5 @@
 import { Tray, Menu, nativeImage, app } from 'electron'
-import { toggleVisibility, isWindowVisible, getWindow, showSettingsWindow } from './window'
-import { getSettings, setSetting } from './store'
+import { toggleVisibility, isWindowVisible, showSettingsWindow } from './window'
 
 let tray: Tray | null = null
 
@@ -58,7 +57,6 @@ export function createTray(): Tray {
 export function updateTrayMenu(): void {
   if (!tray) return
 
-  const settings = getSettings()
   const visible = isWindowVisible()
 
   const contextMenu = Menu.buildFromTemplate([
@@ -75,15 +73,6 @@ export function updateTrayMenu(): void {
       click: () => showSettingsWindow()
     },
     { type: 'separator' },
-    ...(process.env.NODE_ENV === 'development' ? [
-      {
-        label: 'Debug Keyboard Shortcuts',
-        type: 'checkbox' as const,
-        checked: settings.debugKeyboardShortcuts,
-        click: () => toggleDebugKeyboardShortcuts()
-      },
-      { type: 'separator' as const }
-    ] : []),
     {
       label: 'Quit',
       click: () => {
@@ -93,24 +82,4 @@ export function updateTrayMenu(): void {
   ])
 
   tray.setContextMenu(contextMenu)
-}
-
-function toggleDebugKeyboardShortcuts(): void {
-  const settings = getSettings()
-  const newValue = !settings.debugKeyboardShortcuts
-  setSetting('debugKeyboardShortcuts', newValue)
-  notifyRenderer('debug-keyboard-shortcuts-changed', newValue)
-
-  // Update global shortcuts
-  const { updateDebugShortcuts } = require('./index')
-  updateDebugShortcuts()
-
-  updateTrayMenu()
-}
-
-function notifyRenderer(channel: string, data: unknown): void {
-  const win = getWindow()
-  if (win) {
-    win.webContents.send(channel, data)
-  }
 }
