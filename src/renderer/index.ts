@@ -32,7 +32,6 @@ import { StringVibrationVisualizer } from './visualizers/string-vibration'
 import { LiquidVisualizer } from './visualizers/liquid'
 import { GravityWellsVisualizer } from './visualizers/gravity-wells'
 import { BreathingCircleVisualizer } from './visualizers/breathing-circle'
-import { TreeBranchesVisualizer } from './visualizers/tree-branches'
 import { LightningVisualizer } from './visualizers/lightning'
 import { FireVisualizer } from './visualizers/fire'
 import { SmokeMistVisualizer } from './visualizers/smoke-mist'
@@ -77,7 +76,7 @@ type VisualizerMode =
   // Physics
   | 'bouncing-balls' | 'pendulum-wave' | 'string-vibration' | 'liquid' | 'gravity-wells'
   // Organic
-  | 'breathing-circle' | 'tree-branches' | 'lightning' | 'fire' | 'smoke-mist'
+  | 'breathing-circle' | 'lightning' | 'fire' | 'smoke-mist'
   // Retro
   | 'vu-meters' | 'led-matrix' | 'oscilloscope-crt' | 'neon-signs' | 'ascii-art'
   // Abstract
@@ -154,7 +153,6 @@ class AudioVisualizerApp {
   private gravityWellsVisualizer: GravityWellsVisualizer | null = null
   // Organic visualizers
   private breathingCircleVisualizer: BreathingCircleVisualizer | null = null
-  private treeBranchesVisualizer: TreeBranchesVisualizer | null = null
   private lightningVisualizer: LightningVisualizer | null = null
   private fireVisualizer: FireVisualizer | null = null
   private smokeMistVisualizer: SmokeMistVisualizer | null = null
@@ -369,9 +367,6 @@ class AudioVisualizerApp {
     if (this.breathingCircleVisualizer) {
       this.breathingCircleVisualizer.setColorScheme(scheme)
     }
-    if (this.treeBranchesVisualizer) {
-      this.treeBranchesVisualizer.setColorScheme(scheme)
-    }
     if (this.lightningVisualizer) {
       this.lightningVisualizer.setColorScheme(scheme)
     }
@@ -528,7 +523,7 @@ class AudioVisualizerApp {
       case 'spectrum-circular':
         this.spectrumCircularVisualizer = new SpectrumCircularVisualizer({
           container: this.container,
-          barCount: Math.min(density, 180),
+          barCount: Math.min(density * 2, 360), // doubled density for "Spectrum Tubes"
           colorScheme: colorScheme
         })
         this.spectrumCircularVisualizer.init(this.audioCapture.analyser)
@@ -643,7 +638,8 @@ class AudioVisualizerApp {
         this.waveformLissajousVisualizer = new WaveformLissajousVisualizer({
           container: this.container,
           colorScheme: colorScheme,
-          detail: Math.max(1, Math.floor(density / 20))
+          detail: Math.max(1, Math.floor(density / 20)),
+          position: this.currentPosition
         })
         this.waveformLissajousVisualizer.init(this.audioCapture.analyser)
         break
@@ -662,7 +658,8 @@ class AudioVisualizerApp {
         this.polygonMorphVisualizer = new PolygonMorphVisualizer({
           container: this.container,
           colorScheme: colorScheme,
-          ringCount: Math.max(2, Math.floor(density / 16))
+          ringCount: Math.max(2, Math.floor(density / 16)),
+          position: this.currentPosition
         })
         this.polygonMorphVisualizer.init(this.audioCapture.analyser)
         break
@@ -671,7 +668,8 @@ class AudioVisualizerApp {
         this.spiralVisualizer = new SpiralVisualizer({
           container: this.container,
           colorScheme: colorScheme,
-          pointCount: density * 8
+          pointCount: density * 8,
+          position: this.currentPosition
         })
         this.spiralVisualizer.init(this.audioCapture.analyser)
         break
@@ -698,7 +696,8 @@ class AudioVisualizerApp {
         this.mandalaVisualizer = new MandalaVisualizer({
           container: this.container,
           colorScheme: colorScheme,
-          symmetry: Math.max(4, Math.floor(density / 8))
+          symmetry: Math.max(4, Math.floor(density / 8)),
+          position: this.currentPosition
         })
         this.mandalaVisualizer.init(this.audioCapture.analyser)
         break
@@ -754,18 +753,10 @@ class AudioVisualizerApp {
         this.breathingCircleVisualizer = new BreathingCircleVisualizer({
           container: this.container,
           colorScheme: colorScheme,
-          tentacleCount: density
+          tentacleCount: density,
+          position: this.currentPosition
         })
         this.breathingCircleVisualizer.init(this.audioCapture.analyser)
-        break
-
-      case 'tree-branches':
-        this.treeBranchesVisualizer = new TreeBranchesVisualizer({
-          container: this.container,
-          colorScheme: colorScheme,
-          maxDepth: Math.max(4, Math.floor(density / 8))
-        })
-        this.treeBranchesVisualizer.init(this.audioCapture.analyser)
         break
 
       case 'lightning':
@@ -1025,10 +1016,6 @@ class AudioVisualizerApp {
     if (this.breathingCircleVisualizer) {
       this.breathingCircleVisualizer.destroy()
       this.breathingCircleVisualizer = null
-    }
-    if (this.treeBranchesVisualizer) {
-      this.treeBranchesVisualizer.destroy()
-      this.treeBranchesVisualizer = null
     }
     if (this.lightningVisualizer) {
       this.lightningVisualizer.destroy()

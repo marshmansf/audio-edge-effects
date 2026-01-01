@@ -84,13 +84,13 @@ export class SmokeMistVisualizer {
     this.particles.push({
       x,
       y: height + 20,
-      vx: (Math.random() - 0.5) * 1.5,
-      vy: -(0.8 + Math.random() * 2 * energy),
-      size: 40 + Math.random() * 50 + energy * 30,
+      vx: (Math.random() - 0.5) * 2,
+      vy: -(1.2 + Math.random() * 3 * energy), // Faster rise based on energy
+      size: 50 + Math.random() * 60 + energy * 50, // Bigger particles
       life: 1,
-      maxLife: 120 + Math.random() * 80,
+      maxLife: 100 + Math.random() * 60,
       rotation: Math.random() * Math.PI * 2,
-      rotationSpeed: (Math.random() - 0.5) * 0.015,
+      rotationSpeed: (Math.random() - 0.5) * 0.02,
       hue: this.hue + Math.random() * 60
     })
   }
@@ -132,11 +132,24 @@ export class SmokeMistVisualizer {
     }
     highEnergy = highEnergy / (this.dataArray.length - midEnd) / 255
 
-    // Spawn particles based on bass energy
-    const spawnRate = 0.8 + bassEnergy * 3
-    if (Math.random() < spawnRate) {
-      const x = Math.random() * width
-      this.spawnParticle(x, bassEnergy)
+    // Spawn particles based on bass energy - more reactive
+    const spawnRate = 1.5 + bassEnergy * 6
+    const spawnCount = Math.floor(spawnRate)
+
+    for (let i = 0; i < spawnCount; i++) {
+      if (Math.random() < spawnRate - spawnCount + 1) {
+        const x = Math.random() * width
+        this.spawnParticle(x, bassEnergy)
+      }
+    }
+
+    // Spawn extra particles on strong beats
+    if (bassEnergy > 0.4) {
+      const beatSpawns = Math.floor((bassEnergy - 0.3) * 8)
+      for (let i = 0; i < beatSpawns; i++) {
+        const x = Math.random() * width
+        this.spawnParticle(x, bassEnergy * 1.3)
+      }
     }
 
     // Wind from mid frequencies
@@ -167,8 +180,8 @@ export class SmokeMistVisualizer {
       this.ctx.translate(particle.x, particle.y)
       this.ctx.rotate(particle.rotation)
 
-      // Base alpha modulated by energy
-      const baseAlpha = particle.life * (0.12 + bassEnergy * 0.1)
+      // Base alpha modulated by energy - more visible
+      const baseAlpha = particle.life * (0.18 + bassEnergy * 0.2)
 
       // Draw multiple overlapping circles for cloud effect
       const cloudPoints = 6
@@ -206,6 +219,43 @@ export class SmokeMistVisualizer {
 
       return true
     })
+
+    // Apply edge fade - content fades to transparent towards inner edge
+    this.ctx.globalCompositeOperation = 'destination-in'
+
+    if (width > height * 2) {
+      // Horizontal edge (top or bottom) - fade vertically, opaque at bottom (screen edge)
+      const fadeGradient = this.ctx.createLinearGradient(0, 0, 0, height)
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    } else if (height > width * 2) {
+      // Vertical edge (left or right) - fade horizontally, opaque at right (screen edge)
+      const fadeGradient = this.ctx.createLinearGradient(0, 0, width, 0)
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    } else {
+      // Square-ish - fade from center (transparent) to edges (opaque)
+      const fadeGradient = this.ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) * 0.7
+      )
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.7)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    }
+
+    this.ctx.globalCompositeOperation = 'source-over'
 
     this.time += 0.02
     this.hue = (this.hue + 0.2) % 360

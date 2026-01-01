@@ -19,7 +19,7 @@ const ALL_VISUALIZER_MODES: VisualizerMode[] = [
   // Physics
   'bouncing-balls', 'pendulum-wave', 'string-vibration', 'liquid', 'gravity-wells',
   // Organic
-  'breathing-circle', 'tree-branches', 'lightning', 'fire', 'smoke-mist',
+  'breathing-circle', 'lightning', 'fire', 'smoke-mist',
   // Retro
   'vu-meters', 'led-matrix', 'oscilloscope-crt', 'neon-signs', 'ascii-art',
   // Abstract

@@ -144,16 +144,16 @@ export class LiquidVisualizer {
     }
     bassEnergy = bassEnergy / bassEnd / 255
 
-    // Create splashes on bass hits - more sensitive
+    // Create splashes on bass hits - reduced intensity by 25%
     if (bassEnergy > this.lastBassEnergy + 0.05 && bassEnergy > 0.15) {
       const splashPos = Math.random()
-      const splashForce = bassEnergy * 50
+      const splashForce = bassEnergy * 37.5 // reduced from 50
       this.createSplash(splashPos, splashForce)
 
       // Add additional nearby splashes for bigger impact
       if (bassEnergy > 0.3) {
-        this.createSplash(splashPos + 0.1, splashForce * 0.5)
-        this.createSplash(splashPos - 0.1, splashForce * 0.5)
+        this.createSplash(splashPos + 0.1, splashForce * 0.375) // reduced from 0.5
+        this.createSplash(splashPos - 0.1, splashForce * 0.375)
       }
     }
 
@@ -166,13 +166,13 @@ export class LiquidVisualizer {
     }
     midEnergy = midEnergy / (midEnd - midStart) / 255
 
-    // More frequent continuous disturbances - lower threshold
+    // More frequent continuous disturbances - lower threshold, reduced intensity
     if (midEnergy > 0.1) {
       const pos = Math.random()
-      this.createSplash(pos, midEnergy * 12)
+      this.createSplash(pos, midEnergy * 9) // reduced from 12
     }
 
-    // Add treble-reactive surface ripples
+    // Add treble-reactive surface ripples - reduced intensity
     const trebleStart = Math.floor(this.dataArray.length * 0.5)
     let trebleEnergy = 0
     for (let i = trebleStart; i < this.dataArray.length; i++) {
@@ -182,7 +182,7 @@ export class LiquidVisualizer {
 
     if (trebleEnergy > 0.15 && Math.random() < trebleEnergy) {
       const pos = Math.random()
-      this.createSplash(pos, trebleEnergy * 8)
+      this.createSplash(pos, trebleEnergy * 6) // reduced from 8
     }
 
     this.lastBassEnergy = bassEnergy * 0.7 + this.lastBassEnergy * 0.3

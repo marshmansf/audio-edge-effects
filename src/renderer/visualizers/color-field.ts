@@ -171,6 +171,43 @@ export class ColorFieldVisualizer {
     this.ctx.fillStyle = vignette
     this.ctx.fillRect(0, 0, width, height)
 
+    // Apply edge fade - content fades to transparent towards inner edge
+    this.ctx.globalCompositeOperation = 'destination-in'
+
+    if (width > height * 2) {
+      // Horizontal edge (top or bottom) - fade vertically, opaque at bottom (screen edge)
+      const fadeGradient = this.ctx.createLinearGradient(0, 0, 0, height)
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    } else if (height > width * 2) {
+      // Vertical edge (left or right) - fade horizontally, opaque at right (screen edge)
+      const fadeGradient = this.ctx.createLinearGradient(0, 0, width, 0)
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    } else {
+      // Square-ish - fade from center (transparent) to edges (opaque)
+      const fadeGradient = this.ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) * 0.7
+      )
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.7)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    }
+
+    this.ctx.globalCompositeOperation = 'source-over'
+
     this.time += 0.01
   }
 

@@ -69,7 +69,7 @@ export class ConstellationVisualizer {
       this.canvas.width = parent.offsetWidth * window.devicePixelRatio
       this.canvas.height = parent.offsetHeight * window.devicePixelRatio
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-      this.connectionDistance = Math.max(rect.width, rect.height) * 0.15
+      this.connectionDistance = Math.max(parent.offsetWidth, parent.offsetHeight) * 0.15
       this.generateStars()
     }
   }

@@ -127,37 +127,55 @@ export class LightningVisualizer {
     // Clear with transparent background
     this.ctx.clearRect(0, 0, width, height)
 
-    // Calculate energy for transient detection
-    let energy = 0
-    for (let i = 0; i < Math.floor(this.dataArray.length * 0.3); i++) {
-      energy += this.dataArray[i]
+    // Calculate bass energy for beat detection
+    const bassEnd = Math.floor(this.dataArray.length * 0.15)
+    let bassEnergy = 0
+    for (let i = 0; i < bassEnd; i++) {
+      bassEnergy += this.dataArray[i]
     }
-    energy = energy / (this.dataArray.length * 0.3) / 255
+    bassEnergy = bassEnergy / bassEnd / 255
 
-    // Lower threshold for more frequent lightning
-    const energyDelta = energy - this.lastEnergy
+    // Calculate overall energy
+    let totalEnergy = 0
+    for (let i = 0; i < this.dataArray.length; i++) {
+      totalEnergy += this.dataArray[i]
+    }
+    const avgEnergy = totalEnergy / this.dataArray.length / 255
+
+    const energyDelta = bassEnergy - this.lastEnergy
     this.frameCount++
 
-    // Trigger on beat or periodically with lower threshold
-    if ((energyDelta > 0.08 && energy > 0.2) || (energy > 0.3 && this.frameCount % 30 === 0)) {
-      if (this.bolts.length < 8) {
-        // Create lightning from random positions
-        const startX = Math.random() * width
-        const startY = 0
-        const endX = startX + (Math.random() - 0.5) * width * 0.6
-        const endY = height
+    // More frequent lightning triggers - on beat, periodically, or when there's any significant audio
+    const isBeat = energyDelta > 0.05 && bassEnergy > 0.15
+    const isPeriodic = avgEnergy > 0.1 && this.frameCount % 15 === 0
+    const isHighEnergy = bassEnergy > 0.4
 
-        this.bolts.push(this.createBolt(startX, startY, endX, endY))
+    if ((isBeat || isPeriodic || isHighEnergy) && this.bolts.length < this.maxBolts + 3) {
+      // Create lightning from random positions
+      const startX = Math.random() * width
+      const startY = 0
+      const endX = startX + (Math.random() - 0.5) * width * 0.6
+      const endY = height
 
-        // Sometimes add a second bolt
-        if (energy > 0.4 && Math.random() < 0.5) {
-          const startX2 = Math.random() * width
-          const endX2 = startX2 + (Math.random() - 0.5) * width * 0.4
-          this.bolts.push(this.createBolt(startX2, 0, endX2, height))
-        }
+      this.bolts.push(this.createBolt(startX, startY, endX, endY))
+
+      // Add additional bolts based on energy intensity
+      const additionalBolts = Math.floor(bassEnergy * 3)
+      for (let i = 0; i < additionalBolts && this.bolts.length < this.maxBolts + 5; i++) {
+        const startX2 = Math.random() * width
+        const endX2 = startX2 + (Math.random() - 0.5) * width * 0.5
+        this.bolts.push(this.createBolt(startX2, 0, endX2, height))
       }
     }
-    this.lastEnergy = energy * 0.6 + this.lastEnergy * 0.4
+
+    // Also spawn random bolts occasionally when there's any audio at all
+    if (avgEnergy > 0.05 && Math.random() < avgEnergy * 0.3 && this.bolts.length < 3) {
+      const startX = Math.random() * width
+      const endX = startX + (Math.random() - 0.5) * width * 0.4
+      this.bolts.push(this.createBolt(startX, 0, endX, height))
+    }
+
+    this.lastEnergy = bassEnergy * 0.5 + this.lastEnergy * 0.5
 
     // Draw and update bolts
     this.bolts = this.bolts.filter(bolt => {

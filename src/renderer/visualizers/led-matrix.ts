@@ -60,8 +60,8 @@ export class LedMatrixVisualizer {
       this.canvas.height = parent.offsetHeight * window.devicePixelRatio
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
-      const width = rect.width
-      const height = rect.height
+      const width = parent.offsetWidth
+      const height = parent.offsetHeight
       const padding = 2
 
       if (this.targetCols) {
@@ -107,8 +107,10 @@ export class LedMatrixVisualizer {
     const ledRadius = ledSize * 0.4
 
     // Start from left edge, span full width
+    // Pin to bottom edge (screen edge) instead of centering vertically
     const offsetX = padding
-    const offsetY = (height - (this.rows * ledSize + (this.rows + 1) * padding)) / 2
+    const totalLedHeight = this.rows * ledSize + (this.rows + 1) * padding
+    const offsetY = height - totalLedHeight
 
     // Clear canvas with transparency
     this.ctx.clearRect(0, 0, width, height)

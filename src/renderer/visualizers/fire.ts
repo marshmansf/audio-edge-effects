@@ -76,19 +76,34 @@ export class FireVisualizer {
     this.draw()
   }
 
-  private spawnFlame(x: number, intensity: number): void {
+  private spawnFlame(x: number, intensity: number, isEmber: boolean = false): void {
     const height = this.canvas.height / window.devicePixelRatio
 
-    this.particles.push({
-      x,
-      y: height,
-      vx: (Math.random() - 0.5) * 1.5,
-      vy: -(2 + Math.random() * 4 * intensity),
-      life: 1,
-      maxLife: 30 + Math.random() * 30 + intensity * 20,
-      size: 15 + Math.random() * 25 * intensity,
-      hue: this.hue + Math.random() * 30
-    })
+    if (isEmber) {
+      // Small ember particles
+      this.particles.push({
+        x,
+        y: height - Math.random() * 20,
+        vx: (Math.random() - 0.5) * 3,
+        vy: -(3 + Math.random() * 5 * intensity),
+        life: 1,
+        maxLife: 20 + Math.random() * 30,
+        size: 2 + Math.random() * 4,
+        hue: this.hue + Math.random() * 20
+      })
+    } else {
+      // Main flame particles - larger and more elongated
+      this.particles.push({
+        x,
+        y: height,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -(3 + Math.random() * 6 * intensity),
+        life: 1,
+        maxLife: 25 + Math.random() * 25 + intensity * 30,
+        size: 20 + Math.random() * 35 * intensity,
+        hue: this.hue + Math.random() * 30
+      })
+    }
   }
 
   private draw = (): void => {
@@ -122,11 +137,24 @@ export class FireVisualizer {
     }
     midEnergy = midEnergy / (midEnd - bassEnd) / 255
 
-    // Spawn flames based on audio
-    const spawnRate = 5 + bassEnergy * 15
-    for (let i = 0; i < spawnRate; i++) {
+    // Spawn flames based on audio - scaled by density (maxParticles)
+    const densityFactor = this.maxParticles / 400 // normalize around 400 particles (density 100 * 4)
+    const baseSpawnRate = (3 + bassEnergy * 20) * densityFactor
+    const beatBonus = (bassEnergy > 0.4) ? 10 * densityFactor : 0
+    const spawnRate = baseSpawnRate + beatBonus + midEnergy * 10 * densityFactor
+
+    for (let i = 0; i < spawnRate && this.particles.length < this.maxParticles; i++) {
       const x = Math.random() * width
-      this.spawnFlame(x, bassEnergy)
+      this.spawnFlame(x, bassEnergy + midEnergy * 0.5, false)
+    }
+
+    // Spawn embers on strong beats, scaled by density
+    if (bassEnergy > 0.3) {
+      const emberCount = Math.floor(bassEnergy * 8 * densityFactor)
+      for (let i = 0; i < emberCount && this.particles.length < this.maxParticles; i++) {
+        const x = Math.random() * width
+        this.spawnFlame(x, bassEnergy, true)
+      }
     }
 
     // Wind effect
@@ -151,75 +179,101 @@ export class FireVisualizer {
       particle.y += particle.vy
 
       const lifeRatio = particle.life
+      const isEmber = particle.size < 8
 
-      // Flame size - narrow at top, wide at bottom
-      const sizeX = particle.size * lifeRatio * 0.6
-      const sizeY = particle.size * lifeRatio * 1.5 // Taller flames
-
-      // Draw flame shape (elliptical, stretched vertically)
-      this.ctx.save()
-      this.ctx.translate(particle.x, particle.y)
-
-      // Create gradient for flame
-      const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(sizeX, sizeY))
-
-      if (this.colorScheme === 'rainbow') {
-        const hue = (particle.hue) % 360
-        gradient.addColorStop(0, `hsla(${hue + 30}, 100%, 90%, ${lifeRatio * 0.9})`)
-        gradient.addColorStop(0.3, `hsla(${hue}, 100%, 60%, ${lifeRatio * 0.7})`)
-        gradient.addColorStop(0.6, `hsla(${hue - 20}, 100%, 40%, ${lifeRatio * 0.4})`)
-        gradient.addColorStop(1, 'transparent')
-      } else {
-        gradient.addColorStop(0, scheme.core[0])
-        gradient.addColorStop(0.2, scheme.core[1] || scheme.core[0])
-        if (scheme.core[2]) gradient.addColorStop(0.4, scheme.core[2])
-        gradient.addColorStop(0.6, scheme.outer[0])
-        gradient.addColorStop(1, 'transparent')
-      }
-
-      // Draw elliptical flame
-      this.ctx.beginPath()
-      this.ctx.ellipse(0, 0, sizeX, sizeY, 0, 0, Math.PI * 2)
-
-      this.ctx.fillStyle = gradient
-      if (this.colorScheme !== 'rainbow') {
-        this.ctx.globalAlpha = lifeRatio * 0.8
-      }
-      this.ctx.fill()
-
-      // Add inner bright core
-      if (lifeRatio > 0.5) {
-        const coreGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, sizeX * 0.5)
-        if (this.colorScheme === 'rainbow') {
-          coreGradient.addColorStop(0, `hsla(${particle.hue + 40}, 100%, 95%, ${lifeRatio})`)
-        } else {
-          coreGradient.addColorStop(0, scheme.core[0])
-        }
-        coreGradient.addColorStop(1, 'transparent')
-
+      if (isEmber) {
+        // Draw ember as a small glowing dot
+        this.ctx.save()
         this.ctx.beginPath()
-        this.ctx.ellipse(0, -sizeY * 0.2, sizeX * 0.4, sizeY * 0.5, 0, 0, Math.PI * 2)
-        this.ctx.fillStyle = coreGradient
+        this.ctx.arc(particle.x, particle.y, particle.size * lifeRatio, 0, Math.PI * 2)
+
+        if (this.colorScheme === 'rainbow') {
+          this.ctx.fillStyle = `hsla(${particle.hue}, 100%, 70%, ${lifeRatio})`
+          this.ctx.shadowColor = `hsl(${particle.hue}, 100%, 60%)`
+        } else {
+          this.ctx.fillStyle = scheme.ember
+          this.ctx.shadowColor = scheme.ember
+        }
+        this.ctx.shadowBlur = 8
         this.ctx.globalAlpha = lifeRatio
         this.ctx.fill()
+        this.ctx.restore()
+      } else {
+        // Flame size - narrow at top, wide at bottom, more elongated
+        const flickerX = 1 + Math.sin(this.time * 10 + particle.x * 0.1) * 0.15
+        const flickerY = 1 + Math.cos(this.time * 8 + particle.y * 0.1) * 0.1
+        const sizeX = particle.size * lifeRatio * 0.5 * flickerX
+        const sizeY = particle.size * lifeRatio * 2.2 * flickerY // Much taller flames
+
+        // Draw flame shape - pointed at top
+        this.ctx.save()
+        this.ctx.translate(particle.x, particle.y)
+
+        // Create gradient for flame
+        const gradientSize = Math.max(sizeX, sizeY)
+        const gradient = this.ctx.createRadialGradient(0, -sizeY * 0.3, 0, 0, 0, gradientSize)
+
+        if (this.colorScheme === 'rainbow') {
+          const hue = (particle.hue) % 360
+          gradient.addColorStop(0, `hsla(${hue + 30}, 100%, 95%, ${lifeRatio * 0.95})`)
+          gradient.addColorStop(0.2, `hsla(${hue + 15}, 100%, 70%, ${lifeRatio * 0.8})`)
+          gradient.addColorStop(0.5, `hsla(${hue}, 100%, 50%, ${lifeRatio * 0.5})`)
+          gradient.addColorStop(0.8, `hsla(${hue - 20}, 100%, 30%, ${lifeRatio * 0.2})`)
+          gradient.addColorStop(1, 'transparent')
+        } else {
+          gradient.addColorStop(0, scheme.core[0])
+          gradient.addColorStop(0.15, scheme.core[1] || scheme.core[0])
+          if (scheme.core[2]) gradient.addColorStop(0.35, scheme.core[2])
+          gradient.addColorStop(0.55, scheme.outer[0])
+          gradient.addColorStop(0.8, scheme.outer[1])
+          gradient.addColorStop(1, 'transparent')
+        }
+
+        // Draw flame as a teardrop/flame shape using bezier curves
+        this.ctx.beginPath()
+        this.ctx.moveTo(0, -sizeY) // Top point
+        this.ctx.bezierCurveTo(
+          sizeX * 0.8, -sizeY * 0.6,  // Control point 1
+          sizeX * 1.2, sizeY * 0.2,   // Control point 2
+          0, sizeY * 0.5              // End at bottom center
+        )
+        this.ctx.bezierCurveTo(
+          -sizeX * 1.2, sizeY * 0.2,  // Control point 1
+          -sizeX * 0.8, -sizeY * 0.6, // Control point 2
+          0, -sizeY                    // Back to top
+        )
+        this.ctx.closePath()
+
+        this.ctx.fillStyle = gradient
+        if (this.colorScheme !== 'rainbow') {
+          this.ctx.globalAlpha = lifeRatio * 0.85
+        }
+        this.ctx.fill()
+
+        // Add inner bright core for flames that are still young
+        if (lifeRatio > 0.4) {
+          const coreGradient = this.ctx.createRadialGradient(0, -sizeY * 0.2, 0, 0, -sizeY * 0.2, sizeX * 0.6)
+          if (this.colorScheme === 'rainbow') {
+            coreGradient.addColorStop(0, `hsla(${particle.hue + 40}, 100%, 98%, ${lifeRatio})`)
+          } else {
+            coreGradient.addColorStop(0, scheme.core[0])
+          }
+          coreGradient.addColorStop(0.5, this.colorScheme === 'rainbow' ?
+            `hsla(${particle.hue + 20}, 100%, 80%, ${lifeRatio * 0.5})` :
+            (scheme.core[1] || scheme.core[0]))
+          coreGradient.addColorStop(1, 'transparent')
+
+          this.ctx.beginPath()
+          this.ctx.ellipse(0, -sizeY * 0.3, sizeX * 0.5, sizeY * 0.4, 0, 0, Math.PI * 2)
+          this.ctx.fillStyle = coreGradient
+          this.ctx.globalAlpha = lifeRatio * 0.9
+          this.ctx.fill()
+        }
+
+        this.ctx.restore()
       }
 
-      this.ctx.restore()
       this.ctx.globalAlpha = 1
-
-      // Spawn embers occasionally
-      if (Math.random() < 0.02 * bassEnergy && lifeRatio > 0.3) {
-        this.particles.push({
-          x: particle.x + (Math.random() - 0.5) * sizeX,
-          y: particle.y,
-          vx: (Math.random() - 0.5) * 2 + wind,
-          vy: -1 - Math.random() * 2,
-          life: 1,
-          maxLife: 40 + Math.random() * 30,
-          size: 2 + Math.random() * 3,
-          hue: particle.hue
-        })
-      }
 
       return true
     })

@@ -7,6 +7,7 @@ export interface WaveformLissajousOptions {
   container: HTMLElement
   colorScheme?: string
   detail?: number
+  position?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 const colorSchemes: Record<string, { primary: string, secondary: string }> = {
@@ -29,6 +30,7 @@ export class WaveformLissajousVisualizer {
   private animationId: number | null = null
   private colorScheme: string
   private detail: number
+  private position: 'top' | 'bottom' | 'left' | 'right'
   private trailCanvas: HTMLCanvasElement
   private trailCtx: CanvasRenderingContext2D
   private phase: number = 0
@@ -52,6 +54,7 @@ export class WaveformLissajousVisualizer {
 
     this.colorScheme = options.colorScheme || 'classic'
     this.detail = options.detail || 2
+    this.position = options.position || 'bottom'
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -87,10 +90,36 @@ export class WaveformLissajousVisualizer {
 
     const width = this.canvas.width / window.devicePixelRatio
     const height = this.canvas.height / window.devicePixelRatio
-    const centerX = width / 2
-    const centerY = height / 2
 
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
+    const size = Math.min(width, height) * 0.4
+
+    // Calculate center based on position (corner positioning)
+    // Position mapping accounts for container rotation transforms
+    let centerX: number
+    let centerY: number
+
+    switch (this.position) {
+      case 'top': // top right corner - after scaleY(-1), use bottom-right canvas
+        centerX = width - size * 1.1
+        centerY = height - size * 1.1
+        break
+      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
+        centerX = size * 1.1
+        centerY = height - size * 1.1
+        break
+      case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
+        centerX = size * 1.1
+        centerY = height - size * 1.1
+        break
+      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+        centerX = size * 1.1
+        centerY = size * 1.1
+        break
+      default:
+        centerX = width / 2
+        centerY = height / 2
+    }
 
     // Fade the trail canvas by redrawing with reduced opacity
     this.trailCtx.globalCompositeOperation = 'destination-out'
@@ -101,8 +130,6 @@ export class WaveformLissajousVisualizer {
     // Clear main canvas and copy trails
     this.ctx.clearRect(0, 0, width, height)
     this.ctx.drawImage(this.trailCanvas, 0, 0, width, height)
-
-    const size = Math.min(width, height) * 0.8
 
     // Calculate audio energy
     const avgEnergy = this.freqData.reduce((a, b) => a + b, 0) / this.freqData.length / 255

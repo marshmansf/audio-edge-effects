@@ -8,6 +8,7 @@ export interface BreathingCircleOptions {
   container: HTMLElement
   colorScheme?: string
   tentacleCount?: number
+  position?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 const colorSchemes: Record<string, { core: string, glow: string, tentacle: string }> = {
@@ -37,6 +38,7 @@ export class BreathingCircleVisualizer {
   private colorScheme: string
   private tentacles: Tentacle[] = []
   private tentacleCount: number
+  private position: 'top' | 'bottom' | 'left' | 'right'
   private breathPhase: number = 0
   private hue: number = 0
 
@@ -52,6 +54,7 @@ export class BreathingCircleVisualizer {
 
     this.colorScheme = options.colorScheme || 'classic'
     this.tentacleCount = options.tentacleCount || 32
+    this.position = options.position || 'bottom'
 
     this.initTentacles()
 
@@ -100,9 +103,34 @@ export class BreathingCircleVisualizer {
     this.ctx.clearRect(0, 0, width, height)
 
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
-    const centerX = width / 2
-    const centerY = height / 2
     const maxRadius = Math.min(width, height) * 0.35
+
+    // Calculate center based on position (corner positioning)
+    // Position mapping accounts for container rotation transforms
+    let centerX: number
+    let centerY: number
+
+    switch (this.position) {
+      case 'top': // top right corner - after scaleY(-1), use bottom-right canvas
+        centerX = width - maxRadius * 1.1
+        centerY = height - maxRadius * 1.1
+        break
+      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
+        centerX = maxRadius * 1.1
+        centerY = height - maxRadius * 1.1
+        break
+      case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
+        centerX = maxRadius * 1.1
+        centerY = height - maxRadius * 1.1
+        break
+      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+        centerX = maxRadius * 1.1
+        centerY = maxRadius * 1.1
+        break
+      default:
+        centerX = width / 2
+        centerY = height / 2
+    }
 
     // Calculate overall energy for breathing
     let totalEnergy = 0

@@ -8,6 +8,7 @@ export interface PolygonMorphOptions {
   container: HTMLElement
   colorScheme?: string
   ringCount?: number
+  position?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 const colorSchemes: Record<string, { stroke: string, fill: string, glow: string }> = {
@@ -29,6 +30,7 @@ export class PolygonMorphVisualizer {
   private animationId: number | null = null
   private colorScheme: string
   private ringCount: number
+  private position: 'top' | 'bottom' | 'left' | 'right'
   private currentSides: number = 3
   private targetSides: number = 3
   private rotation: number = 0
@@ -48,6 +50,7 @@ export class PolygonMorphVisualizer {
 
     this.colorScheme = options.colorScheme || 'classic'
     this.ringCount = options.ringCount || 4
+    this.position = options.position || 'bottom'
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -132,8 +135,38 @@ export class PolygonMorphVisualizer {
     this.ctx.clearRect(0, 0, width, height)
 
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
-    const centerX = width / 2
-    const centerY = height / 2
+
+    // Calculate center based on position (corner positioning)
+    const maxRadius = Math.min(width, height) * 0.45
+    let centerX: number
+    let centerY: number
+
+    // Position mapping accounts for container rotation transforms:
+    // - bottom: no rotation, bottom-left canvas = bottom-left screen
+    // - top: scaleY(-1) vertical flip, bottom-right canvas = top-right screen
+    // - left: rotate(90deg), top-left canvas = top-left screen
+    // - right: rotate(-90deg), bottom-left canvas = bottom-right screen
+    switch (this.position) {
+      case 'top': // top right corner - after scaleY(-1), use bottom-right canvas
+        centerX = width - maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
+        centerX = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
+        centerX = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+        centerX = maxRadius * 0.9
+        centerY = maxRadius * 0.9
+        break
+      default:
+        centerX = width / 2
+        centerY = height / 2
+    }
 
     // Calculate frequency band energies
     const bassEnd = Math.floor(this.dataArray.length * 0.15)

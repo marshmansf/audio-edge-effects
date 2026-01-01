@@ -244,12 +244,12 @@ export class VuMetersVisualizer {
       }
     }
 
-    // Draw meters
-    const meterRadius = Math.min(width / 4, height * 0.8)
+    // Draw meters - shrunk by 10% to prevent cutoff
+    const meterRadius = Math.min(width / 4, height * 0.8) * 0.9
     const spacing = width / 3
 
-    this.drawMeter(spacing, height * 0.7, meterRadius, this.meters[0], 'L')
-    this.drawMeter(spacing * 2, height * 0.7, meterRadius, this.meters[1], 'R')
+    this.drawMeter(spacing, height * 0.75, meterRadius, this.meters[0], 'L')
+    this.drawMeter(spacing * 2, height * 0.75, meterRadius, this.meters[1], 'R')
 
     this.hue = (this.hue + 0.5) % 360
   }

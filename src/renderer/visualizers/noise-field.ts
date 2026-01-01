@@ -179,23 +179,28 @@ export class NoiseFieldVisualizer {
     const imageData = this.ctx.createImageData(width, height)
     const data = imageData.data
 
-    const scale = 0.02 + bassEnergy * 0.02
-    const octaves = 3 + Math.floor(midEnergy * 2)
+    const scale = 0.015 + bassEnergy * 0.03
+    const octaves = 3 + Math.floor(midEnergy * 3)
+
+    // Audio-reactive parameters
+    const distortionStrength = 20 + bassEnergy * 80 // Much stronger distortion on bass
+    const brightness = 0.5 + highEnergy * 1.0 // Brighter with high frequencies
+    const speed = 0.3 + bassEnergy * 1.0 // Faster movement with bass
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        // Calculate noise with audio-influenced distortion
-        const distortX = x + Math.sin(y * 0.02 + this.time) * bassEnergy * 30
-        const distortY = y + Math.cos(x * 0.02 + this.time) * bassEnergy * 30
+        // Calculate noise with audio-influenced distortion - more reactive
+        const distortX = x + Math.sin(y * 0.03 + this.time * speed) * distortionStrength
+        const distortY = y + Math.cos(x * 0.03 + this.time * speed) * distortionStrength
 
         const noiseVal = this.fbm(
-          distortX * scale + this.time * 0.5,
+          distortX * scale + this.time * speed,
           distortY * scale,
           octaves
         )
 
-        // Normalize to 0-1
-        const normalized = (noiseVal + 1) / 2
+        // Normalize to 0-1 with audio-reactive boost
+        const normalized = Math.min(1, Math.max(0, ((noiseVal + 1) / 2) * brightness))
 
         // Color based on scheme
         const index = (y * width + x) * 4
@@ -239,7 +244,44 @@ export class NoiseFieldVisualizer {
 
     this.ctx.putImageData(imageData, 0, 0)
 
-    this.time += 0.02 + bassEnergy * 0.03
+    // Apply edge fade - content fades to transparent towards inner edge
+    this.ctx.globalCompositeOperation = 'destination-in'
+
+    if (width > height * 2) {
+      // Horizontal edge (top or bottom) - fade vertically, opaque at bottom (screen edge)
+      const fadeGradient = this.ctx.createLinearGradient(0, 0, 0, height)
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    } else if (height > width * 2) {
+      // Vertical edge (left or right) - fade horizontally, opaque at right (screen edge)
+      const fadeGradient = this.ctx.createLinearGradient(0, 0, width, 0)
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    } else {
+      // Square-ish - fade from center (transparent) to edges (opaque)
+      const fadeGradient = this.ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) * 0.7
+      )
+      fadeGradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+      fadeGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.3)')
+      fadeGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.7)')
+      fadeGradient.addColorStop(1, 'rgba(255, 255, 255, 1)')
+      this.ctx.fillStyle = fadeGradient
+      this.ctx.fillRect(0, 0, width, height)
+    }
+
+    this.ctx.globalCompositeOperation = 'source-over'
+
+    this.time += 0.03 + bassEnergy * 0.06
     this.hue = (this.hue + 0.5) % 360
   }
 

@@ -8,6 +8,7 @@ export interface MandalaOptions {
   container: HTMLElement
   colorScheme?: string
   symmetry?: number
+  position?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 const colorSchemes: Record<string, string[]> = {
@@ -36,6 +37,7 @@ export class MandalaVisualizer {
   private animationId: number | null = null
   private colorScheme: string
   private symmetry: number
+  private position: 'top' | 'bottom' | 'left' | 'right'
   private rotation: number = 0
   private petals: Petal[] = []
   private hue: number = 0
@@ -53,6 +55,7 @@ export class MandalaVisualizer {
 
     this.colorScheme = options.colorScheme || 'classic'
     this.symmetry = options.symmetry || 8
+    this.position = options.position || 'bottom'
 
     // Initialize petals
     for (let i = 0; i < 8; i++) {
@@ -144,9 +147,34 @@ export class MandalaVisualizer {
     // Clear with transparent background
     this.ctx.clearRect(0, 0, width, height)
 
-    const centerX = width / 2
-    const centerY = height / 2
     const maxRadius = Math.min(width, height) * 0.45
+
+    // Calculate center based on position (corner positioning)
+    // Position mapping accounts for container rotation transforms
+    let centerX: number
+    let centerY: number
+
+    switch (this.position) {
+      case 'top': // top right corner - after scaleY(-1), use bottom-right canvas
+        centerX = width - maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
+        centerX = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
+        centerX = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+        centerX = maxRadius * 0.9
+        centerY = maxRadius * 0.9
+        break
+      default:
+        centerX = width / 2
+        centerY = height / 2
+    }
 
     // Calculate energy per petal from frequency bands
     const bandSize = Math.floor(this.dataArray.length / this.petals.length)

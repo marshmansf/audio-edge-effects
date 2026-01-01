@@ -8,6 +8,7 @@ export interface SpiralOptions {
   container: HTMLElement
   colorScheme?: string
   pointCount?: number
+  position?: 'top' | 'bottom' | 'left' | 'right'
 }
 
 const colorSchemes: Record<string, { primary: string, secondary: string }> = {
@@ -29,6 +30,7 @@ export class SpiralVisualizer {
   private animationId: number | null = null
   private colorScheme: string
   private pointCount: number
+  private position: 'top' | 'bottom' | 'left' | 'right'
   private rotation: number = 0
   private hue: number = 0
 
@@ -44,6 +46,7 @@ export class SpiralVisualizer {
 
     this.colorScheme = options.colorScheme || 'classic'
     this.pointCount = options.pointCount || 500
+    this.position = options.position || 'bottom'
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -77,9 +80,34 @@ export class SpiralVisualizer {
     this.ctx.clearRect(0, 0, width, height)
 
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
-    const centerX = width / 2
-    const centerY = height / 2
     const maxRadius = Math.min(width, height) * 0.45
+
+    // Calculate center based on position (corner positioning)
+    // Position mapping accounts for container rotation transforms
+    let centerX: number
+    let centerY: number
+
+    switch (this.position) {
+      case 'top': // top right corner - after scaleY(-1), use bottom-right canvas
+        centerX = width - maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
+        centerX = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
+        centerX = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
+        break
+      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+        centerX = maxRadius * 0.9
+        centerY = maxRadius * 0.9
+        break
+      default:
+        centerX = width / 2
+        centerY = height / 2
+    }
 
     // Calculate bass energy (first 15% of spectrum)
     const bassEnd = Math.floor(this.dataArray.length * 0.15)

@@ -58,8 +58,8 @@ export class AsciiArtVisualizer {
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
       // Calculate optimal cols/rows based on size and baseCols
-      const width = rect.width
-      const height = rect.height
+      const width = parent.offsetWidth
+      const height = parent.offsetHeight
       const charWidth = width / this.baseCols
       const charHeight = charWidth * 1.6
 

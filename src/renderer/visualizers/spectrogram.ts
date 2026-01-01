@@ -56,7 +56,7 @@ export class SpectrogramVisualizer {
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
       // Calculate max history based on width (4x faster scroll)
-      const width = rect.width
+      const width = parent.offsetWidth
       this.maxHistory = Math.ceil(width / 8) // 8px per column for faster scroll
 
       // Trim history if needed

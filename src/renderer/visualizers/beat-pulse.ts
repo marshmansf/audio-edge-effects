@@ -123,9 +123,9 @@ export class BeatPulseVisualizer {
         this.canvas.width / window.devicePixelRatio,
         this.canvas.height / window.devicePixelRatio
       ) * 1.5,
-      alpha: 0.8 + energy * 0.2,
+      alpha: 1.0 + energy * 0.3, // Increased intensity
       color,
-      lineWidth: 3 + energy * 10
+      lineWidth: 8 + energy * 20 // Increased thickness
     })
   }
 
@@ -175,14 +175,23 @@ export class BeatPulseVisualizer {
       this.ctx.beginPath()
       this.ctx.arc(originX, originY, pulse.radius, Math.PI, 0)
       this.ctx.strokeStyle = pulse.color
-      this.ctx.lineWidth = pulse.lineWidth * pulse.alpha
-      this.ctx.globalAlpha = pulse.alpha
+      this.ctx.lineWidth = pulse.lineWidth * (0.5 + pulse.alpha * 0.5) // Maintain thickness longer
+      this.ctx.globalAlpha = Math.min(1, pulse.alpha * 1.2) // Boost alpha
 
-      // Add glow
-      this.ctx.shadowBlur = 20
+      // Add stronger glow
+      this.ctx.shadowBlur = 30 + pulse.lineWidth
       this.ctx.shadowColor = pulse.color
 
       this.ctx.stroke()
+
+      // Draw a second, inner ring for more impact
+      if (pulse.alpha > 0.3) {
+        this.ctx.beginPath()
+        this.ctx.arc(originX, originY, pulse.radius * 0.92, Math.PI, 0)
+        this.ctx.lineWidth = pulse.lineWidth * 0.4
+        this.ctx.globalAlpha = pulse.alpha * 0.6
+        this.ctx.stroke()
+      }
 
       return true
     })
@@ -191,17 +200,17 @@ export class BeatPulseVisualizer {
     this.ctx.globalAlpha = 1
     this.ctx.shadowBlur = 0
 
-    // Draw constant subtle ambient energy indicator
+    // Draw constant subtle ambient energy indicator - more visible
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
-    const ambientRadius = 20 + energy * 100
-    const ambientAlpha = 0.1 + energy * 0.2
+    const ambientRadius = 30 + energy * 120
+    const ambientAlpha = 0.15 + energy * 0.35
 
     this.ctx.beginPath()
     this.ctx.arc(originX, originY, ambientRadius, Math.PI, 0)
     this.ctx.strokeStyle = scheme.primary
-    this.ctx.lineWidth = 2
+    this.ctx.lineWidth = 4 + energy * 4
     this.ctx.globalAlpha = ambientAlpha
-    this.ctx.shadowBlur = 10
+    this.ctx.shadowBlur = 15 + energy * 10
     this.ctx.shadowColor = scheme.primary
     this.ctx.stroke()
 

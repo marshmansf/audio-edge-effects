@@ -136,20 +136,39 @@ export class BouncingBallsVisualizer {
       this.initialized = true
     }
 
-    // Spawn new balls on beat
-    if (bassEnergy > this.lastBassEnergy + 0.1 && bassEnergy > 0.25 && this.balls.length < this.maxBalls) {
-      const spawnX = Math.random() * width
-      this.spawnBall(spawnX, bassEnergy)
+    // Beat detection - spawn balls on beat
+    // Scale spawn rate with density (maxBalls)
+    const densityFactor = this.maxBalls / 100 // normalize around 100 density
+    const beatThreshold = 0.08
+    const energyDelta = bassEnergy - this.lastBassEnergy
+    const isBeat = energyDelta > beatThreshold && bassEnergy > 0.15
+
+    if (isBeat && this.balls.length < this.maxBalls) {
+      // Spawn multiple balls based on beat intensity, scaled by density
+      const ballCount = Math.max(1, Math.floor(bassEnergy * 5 * densityFactor))
+      for (let i = 0; i < ballCount && this.balls.length < this.maxBalls; i++) {
+        const spawnX = Math.random() * width
+        this.spawnBall(spawnX, bassEnergy)
+      }
     }
 
-    // Keep a minimum number of balls always present
-    const minBalls = 5
+    // Strong beats spawn even more balls, scaled by density
+    if (bassEnergy > 0.5 && this.balls.length < this.maxBalls - 3) {
+      const extraBalls = Math.floor((bassEnergy - 0.5) * 8 * densityFactor)
+      for (let i = 0; i < extraBalls; i++) {
+        const spawnX = Math.random() * width
+        this.spawnBall(spawnX, bassEnergy * 1.2)
+      }
+    }
+
+    // Keep a minimum number of balls always present, scaled by density
+    const minBalls = Math.max(3, Math.floor(this.maxBalls * 0.1))
     while (this.balls.length < minBalls) {
       const spawnX = width * (0.1 + Math.random() * 0.8)
       this.spawnBall(spawnX, 0.3 + Math.random() * 0.3)
     }
 
-    this.lastBassEnergy = bassEnergy * 0.85 + this.lastBassEnergy * 0.15
+    this.lastBassEnergy = bassEnergy * 0.7 + this.lastBassEnergy * 0.3
 
     // Calculate energy per frequency band
     const bandSize = Math.floor(this.dataArray.length / 8)
@@ -224,8 +243,12 @@ export class BouncingBallsVisualizer {
         ? `hsl(${ball.hue}, 100%, 60%)`
         : ball.color
 
+      const ballColorFaded = this.colorScheme === 'rainbow'
+        ? `hsla(${ball.hue}, 100%, 60%, 0.53)`
+        : `${ball.color}88`
+
       gradient.addColorStop(0, ballColor)
-      gradient.addColorStop(0.5, `${ballColor}88`)
+      gradient.addColorStop(0.5, ballColorFaded)
       gradient.addColorStop(1, 'transparent')
 
       this.ctx.beginPath()
