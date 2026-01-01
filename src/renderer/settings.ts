@@ -4,12 +4,14 @@ declare global {
     electronAPI: {
       getSettings: () => Promise<Settings>
       setSetting: (key: string, value: unknown) => Promise<boolean>
+      togglePosition: (position: string) => Promise<string[]>
     }
   }
 }
 
 interface Settings {
   position: string
+  positions: string[]
   height: number
   opacity: number
   visualizerMode: string
@@ -55,9 +57,10 @@ class SettingsUI {
     // Visualizer
     this.visualizerSelect.value = settings.visualizerMode
 
-    // Position
+    // Position - now supports multiple active edges
+    const activePositions = settings.positions || [settings.position]
     this.positionZones.forEach(zone => {
-      zone.classList.toggle('active', zone.dataset.position === settings.position)
+      zone.classList.toggle('active', activePositions.includes(zone.dataset.position!))
     })
 
     // Size
@@ -86,12 +89,18 @@ class SettingsUI {
       this.saveSetting('visualizerMode', this.visualizerSelect.value)
     })
 
-    // Position zones
+    // Position zones - toggle for multi-edge support
     this.positionZones.forEach(zone => {
-      zone.addEventListener('click', () => {
-        this.positionZones.forEach(z => z.classList.remove('active'))
-        zone.classList.add('active')
-        this.saveSetting('position', zone.dataset.position!)
+      zone.addEventListener('click', async () => {
+        const position = zone.dataset.position!
+
+        // Toggle this position and get updated positions array
+        const newPositions = await window.electronAPI.togglePosition(position)
+
+        // Update UI to reflect new state
+        this.positionZones.forEach(z => {
+          z.classList.toggle('active', newPositions.includes(z.dataset.position!))
+        })
       })
     })
 

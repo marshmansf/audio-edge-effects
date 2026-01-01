@@ -3,19 +3,19 @@ import * as path from 'path'
 import { getSettings, setSetting } from './store'
 import { EdgePosition } from '../shared/types'
 
-let mainWindow: BrowserWindow | null = null
+// Map of overlay windows keyed by position
+const overlayWindows: Map<EdgePosition, BrowserWindow> = new Map()
 let settingsWindow: BrowserWindow | null = null
 let isVisible = true
 
-export function createWindow(): BrowserWindow {
+function createOverlayWindow(position: EdgePosition): BrowserWindow {
   const settings = getSettings()
   const primaryDisplay = screen.getPrimaryDisplay()
-  // Use full screen size (not workAreaSize) to align with actual screen edges
   const { width: screenWidth, height: screenHeight } = primaryDisplay.size
 
-  const windowConfig = getWindowConfig(settings.position, screenWidth, screenHeight, settings.height)
+  const windowConfig = getWindowConfig(position, screenWidth, screenHeight, settings.height)
 
-  mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     ...windowConfig,
     frame: false,
     transparent: true,
@@ -32,23 +32,67 @@ export function createWindow(): BrowserWindow {
   })
 
   // Make window click-through
-  mainWindow.setIgnoreMouseEvents(true)
+  win.setIgnoreMouseEvents(true)
 
   // Prevent window from being closed, just hide it
-  mainWindow.on('close', (e) => {
+  win.on('close', (e) => {
     e.preventDefault()
-    mainWindow?.hide()
-    isVisible = false
+    win.hide()
   })
 
-  // Load the renderer
+  win.on('closed', () => {
+    overlayWindows.delete(position)
+  })
+
+  // Load the renderer with position query parameter
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173')
+    win.loadURL(`http://localhost:5173?position=${position}`)
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+    win.loadFile(path.join(__dirname, '../renderer/index.html'), {
+      query: { position }
+    })
   }
 
-  return mainWindow
+  return win
+}
+
+export function createWindows(): void {
+  const settings = getSettings()
+  const positions = settings.positions || ['bottom']
+
+  for (const position of positions) {
+    if (!overlayWindows.has(position)) {
+      const win = createOverlayWindow(position)
+      overlayWindows.set(position, win)
+    }
+  }
+}
+
+export function syncOverlayWindows(positions: EdgePosition[]): void {
+  // Remove windows for positions no longer active
+  for (const [pos, win] of overlayWindows) {
+    if (!positions.includes(pos)) {
+      win.destroy()
+      overlayWindows.delete(pos)
+    }
+  }
+
+  // Add windows for new positions
+  for (const pos of positions) {
+    if (!overlayWindows.has(pos)) {
+      const win = createOverlayWindow(pos)
+      overlayWindows.set(pos, win)
+      if (isVisible) win.show()
+    }
+  }
+}
+
+export function broadcastToOverlays(channel: string, ...args: unknown[]): void {
+  for (const win of overlayWindows.values()) {
+    if (!win.isDestroyed()) {
+      win.webContents.send(channel, ...args)
+    }
+  }
 }
 
 function getWindowConfig(position: EdgePosition, screenWidth: number, screenHeight: number, height: number) {
@@ -66,49 +110,38 @@ function getWindowConfig(position: EdgePosition, screenWidth: number, screenHeig
   }
 }
 
-export function setPosition(position: EdgePosition): void {
-  if (!mainWindow) return
-
-  const settings = getSettings()
-  const primaryDisplay = screen.getPrimaryDisplay()
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.size
-
-  const config = getWindowConfig(position, screenWidth, screenHeight, settings.height)
-  mainWindow.setBounds(config)
-  setSetting('position', position)
-
-  // Notify renderer of position change for rotation
-  mainWindow.webContents.send('position-changed', position)
-}
-
 export function setHeight(height: number): void {
-  if (!mainWindow) return
-
-  const settings = getSettings()
   const primaryDisplay = screen.getPrimaryDisplay()
   const { width: screenWidth, height: screenHeight } = primaryDisplay.size
 
-  const config = getWindowConfig(settings.position, screenWidth, screenHeight, height)
-  mainWindow.setBounds(config)
+  for (const [position, win] of overlayWindows) {
+    const config = getWindowConfig(position, screenWidth, screenHeight, height)
+    win.setBounds(config)
+  }
   setSetting('height', height)
 }
 
 export function toggleVisibility(): boolean {
-  if (!mainWindow) return false
+  isVisible = !isVisible
 
-  if (isVisible) {
-    mainWindow.hide()
-    isVisible = false
-  } else {
-    mainWindow.show()
-    isVisible = true
+  for (const win of overlayWindows.values()) {
+    if (isVisible) {
+      win.show()
+    } else {
+      win.hide()
+    }
   }
 
   return isVisible
 }
 
-export function getWindow(): BrowserWindow | null {
-  return mainWindow
+export function getOverlayWindows(): Map<EdgePosition, BrowserWindow> {
+  return overlayWindows
+}
+
+export function getFirstOverlayWindow(): BrowserWindow | null {
+  const first = overlayWindows.values().next()
+  return first.done ? null : first.value
 }
 
 export function isWindowVisible(): boolean {

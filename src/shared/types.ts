@@ -21,7 +21,8 @@ export type VisualizerMode =
   | 'noise-field' | 'color-field' | 'glitch' | 'moire'
 
 export interface Settings {
-  position: EdgePosition
+  position: EdgePosition // Deprecated - kept for migration
+  positions: EdgePosition[] // Active edges (supports multiple)
   height: number
   opacity: number
   visualizerMode: VisualizerMode
@@ -33,6 +34,7 @@ export interface Settings {
 
 export const defaultSettings: Settings = {
   position: 'bottom',
+  positions: ['bottom'],
   height: 60,
   opacity: 0.85,
   visualizerMode: 'spectrum',

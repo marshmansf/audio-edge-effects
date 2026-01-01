@@ -52,9 +52,10 @@ declare global {
     electronAPI: {
       getSettings: () => Promise<Settings>
       setSetting: (key: string, value: unknown) => Promise<boolean>
+      togglePosition: (position: string) => Promise<string[]>
+      getWindowPosition: () => string
       onVisualizerModeChanged: (callback: (mode: string) => void) => void
       onOpacityChanged: (callback: (opacity: number) => void) => void
-      onPositionChanged: (callback: (position: string) => void) => void
       onColorSchemeChanged: (callback: (scheme: string) => void) => void
       onDensityChanged: (callback: (density: number) => void) => void
     }
@@ -83,6 +84,7 @@ type VisualizerMode =
 
 interface Settings {
   position: string
+  positions: string[]
   height: number
   opacity: number
   visualizerMode: VisualizerMode
@@ -178,18 +180,18 @@ class AudioVisualizerApp {
   }
 
   async init(): Promise<void> {
-    this.showStatus('Initializing...')
-
     try {
       // Load settings
       this.settings = await window.electronAPI.getSettings()
       this.currentMode = this.settings.visualizerMode
-      this.currentPosition = this.settings.position as EdgePosition
+
+      // Get this window's position from URL query parameter (each window has a fixed position)
+      this.currentPosition = window.electronAPI.getWindowPosition() as EdgePosition
 
       // Set up IPC listeners
       this.setupIPCListeners()
 
-      // Apply initial rotation
+      // Apply initial rotation based on this window's fixed position
       this.applyRotation(this.currentPosition)
 
       // Check for audio devices
@@ -201,8 +203,6 @@ class AudioVisualizerApp {
         this.showStatus('No BlackHole device found. Please install BlackHole and configure Multi-Output Device.')
         return
       }
-
-      this.showStatus(`Connecting to ${blackhole.label}...`)
 
       // Capture audio
       this.audioCapture = await captureAudio(
@@ -239,16 +239,8 @@ class AudioVisualizerApp {
       document.body.style.opacity = String(opacity)
     })
 
-    window.electronAPI.onPositionChanged((position) => {
-      this.currentPosition = position as EdgePosition
-      if (this.settings) {
-        this.settings.position = position
-      }
-      this.applyRotation(this.currentPosition)
-      // Reinitialize visualizer to handle dimension changes properly
-      this.destroyAllVisualizers()
-      this.initVisualizer()
-    })
+    // Note: onPositionChanged removed - each window now has a fixed position
+    // Position is determined at window creation via URL query parameter
 
     window.electronAPI.onColorSchemeChanged((scheme) => {
       if (this.settings) {

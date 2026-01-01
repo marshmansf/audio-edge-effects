@@ -1,8 +1,8 @@
 import { app, ipcMain, session, globalShortcut } from 'electron'
-import { createWindow, getWindow } from './window'
+import { createWindows, broadcastToOverlays, syncOverlayWindows, setHeight, getFirstOverlayWindow } from './window'
 import { createTray, updateTrayMenu } from './tray'
-import { getSettings, setSetting } from './store'
-import { VisualizerMode } from '../shared/types'
+import { getSettings, setSetting, togglePosition } from './store'
+import { VisualizerMode, EdgePosition } from '../shared/types'
 
 // All visualizer modes in order for debug navigation
 const ALL_VISUALIZER_MODES: VisualizerMode[] = [
@@ -42,7 +42,7 @@ app.whenReady().then(() => {
     }
   })
 
-  createWindow()
+  createWindows()
   createTray()
 
   // Register debug shortcuts if enabled
@@ -62,9 +62,8 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  const { getWindow } = require('./window')
-  if (!getWindow()) {
-    createWindow()
+  if (!getFirstOverlayWindow()) {
+    createWindows()
   }
 })
 
@@ -76,36 +75,32 @@ ipcMain.handle('get-settings', () => {
 ipcMain.handle('set-setting', (_event, key: string, value: unknown) => {
   setSetting(key as keyof ReturnType<typeof getSettings>, value as never)
 
-  // Notify the main visualizer window of the change
-  const win = getWindow()
-  if (win) {
-    switch (key) {
-      case 'visualizerMode':
-        win.webContents.send('visualizer-mode-changed', value)
-        break
-      case 'opacity':
-        win.webContents.send('opacity-changed', value)
-        break
-      case 'position':
-        // Also update window position
-        const { setPosition } = require('./window')
-        setPosition(value as string)
-        break
-      case 'height':
-        // Also update window size
-        const { setHeight } = require('./window')
-        setHeight(value as number)
-        break
-      case 'colorScheme':
-        win.webContents.send('color-scheme-changed', value)
-        break
-      case 'density':
-        win.webContents.send('density-changed', value)
-        break
-    }
+  // Broadcast changes to all overlay windows
+  switch (key) {
+    case 'visualizerMode':
+      broadcastToOverlays('visualizer-mode-changed', value)
+      break
+    case 'opacity':
+      broadcastToOverlays('opacity-changed', value)
+      break
+    case 'height':
+      setHeight(value as number)
+      break
+    case 'colorScheme':
+      broadcastToOverlays('color-scheme-changed', value)
+      break
+    case 'density':
+      broadcastToOverlays('density-changed', value)
+      break
   }
 
   return true
+})
+
+ipcMain.handle('toggle-position', (_event, position: EdgePosition) => {
+  const newPositions = togglePosition(position)
+  syncOverlayWindows(newPositions)
+  return newPositions
 })
 
 // Debug keyboard shortcuts (global shortcuts, dev mode only)
@@ -124,11 +119,7 @@ function navigateVisualizer(direction: 'next' | 'prev'): void {
   console.log(`Switching to: ${newMode} (${newIndex + 1}/${ALL_VISUALIZER_MODES.length})`)
 
   setSetting('visualizerMode', newMode)
-
-  const win = getWindow()
-  if (win) {
-    win.webContents.send('visualizer-mode-changed', newMode)
-  }
+  broadcastToOverlays('visualizer-mode-changed', newMode)
 
   updateTrayMenu()
 }
