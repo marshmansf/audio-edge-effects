@@ -29,7 +29,8 @@ interface Particle {
   brightness: number
   hue: number
   size: number
-  trail: { x: number, y: number }[]
+  prevX: number  // Only store previous position for simple trail
+  prevY: number
 }
 
 interface GravityWell {
@@ -65,7 +66,8 @@ export class GravityWellsVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
-    this.maxParticles = options.maxParticles || 300
+    // Cap at 500 particles for performance - higher values cause slowdown
+    this.maxParticles = Math.min(options.maxParticles || 300, 500)
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -122,16 +124,19 @@ export class GravityWellsVisualizer {
     const well = this.wells[wellIndex]
     const angle = Math.random() * Math.PI * 2
     const dist = 50 + Math.random() * 100
+    const x = well.x + Math.cos(angle) * dist
+    const y = well.y + Math.sin(angle) * dist
 
     this.particles.push({
-      x: well.x + Math.cos(angle) * dist,
-      y: well.y + Math.sin(angle) * dist,
+      x,
+      y,
       vx: Math.sin(angle) * 2,
       vy: -Math.cos(angle) * 2,
       brightness: 0.5 + Math.random() * 0.5,
       hue: Math.random() * 360,
       size: 1 + Math.random() * 2,
-      trail: []
+      prevX: x,
+      prevY: y
     })
   }
 
@@ -234,8 +239,16 @@ export class GravityWellsVisualizer {
       }
     }
 
-    // Update and draw particles
-    this.particles = this.particles.filter(particle => {
+    // Update particles (physics only, no drawing yet)
+    const particleCount = this.particles.length
+    const maxSpeed = 10
+    const driftScale = midEnergy * 0.3
+
+    for (const particle of this.particles) {
+      // Store previous position for trail
+      particle.prevX = particle.x
+      particle.prevY = particle.y
+
       // Apply gravity from wells
       for (const well of this.wells) {
         if (well.strength < 20) continue
@@ -243,87 +256,99 @@ export class GravityWellsVisualizer {
         const dx = well.x - particle.x
         const dy = well.y - particle.y
         const distSq = dx * dx + dy * dy
-        const dist = Math.sqrt(distSq)
 
-        if (dist > 10 && dist < 300) {
-          const force = well.strength / distSq
-          particle.vx += (dx / dist) * force * 0.03
-          particle.vy += (dy / dist) * force * 0.03
+        if (distSq > 100 && distSq < 90000) { // 10^2 to 300^2
+          const dist = Math.sqrt(distSq)
+          const force = (well.strength / distSq) * 0.03
+          particle.vx += (dx / dist) * force
+          particle.vy += (dy / dist) * force
         }
       }
 
       // Apply drift based on mid frequency
-      particle.vx += (Math.random() - 0.5) * midEnergy * 0.3
-      particle.vy += (Math.random() - 0.5) * midEnergy * 0.3
+      particle.vx += (Math.random() - 0.5) * driftScale
+      particle.vy += (Math.random() - 0.5) * driftScale
 
       // Limit velocity
-      const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy)
-      if (speed > 10) {
-        particle.vx = (particle.vx / speed) * 10
-        particle.vy = (particle.vy / speed) * 10
+      const speedSq = particle.vx * particle.vx + particle.vy * particle.vy
+      if (speedSq > maxSpeed * maxSpeed) {
+        const speed = Math.sqrt(speedSq)
+        particle.vx = (particle.vx / speed) * maxSpeed
+        particle.vy = (particle.vy / speed) * maxSpeed
       }
 
       // Update position
       particle.x += particle.vx
       particle.y += particle.vy
 
-      // Add to trail
-      particle.trail.push({ x: particle.x, y: particle.y })
-      if (particle.trail.length > 20) {
-        particle.trail.shift()
-      }
-
       // Wrap around edges
       if (particle.x < -50) particle.x = width + 50
-      if (particle.x > width + 50) particle.x = -50
+      else if (particle.x > width + 50) particle.x = -50
       if (particle.y < -50) particle.y = height + 50
-      if (particle.y > height + 50) particle.y = -50
+      else if (particle.y > height + 50) particle.y = -50
 
-      // Update brightness based on treble
+      // Update brightness and hue
       particle.brightness = 0.4 + trebleEnergy * 0.6
+      particle.hue = (particle.hue + 0.5) % 360
+    }
 
-      // Draw trail
-      if (particle.trail.length > 1) {
+    // Draw all trails in one batch (much faster than individual strokes)
+    if (particleCount < 400) {
+      this.ctx.lineWidth = 1.5
+      this.ctx.lineCap = 'round'
+
+      if (this.colorScheme === 'rainbow') {
+        // For rainbow, group by hue ranges to reduce color changes
+        for (const particle of this.particles) {
+          this.ctx.beginPath()
+          this.ctx.moveTo(particle.prevX, particle.prevY)
+          this.ctx.lineTo(particle.x, particle.y)
+          this.ctx.strokeStyle = `hsla(${Math.round(particle.hue / 30) * 30}, 80%, 60%, ${particle.brightness * 0.5})`
+          this.ctx.stroke()
+        }
+      } else {
+        // For solid colors, batch all trails together
+        this.ctx.strokeStyle = scheme.trail
+        this.ctx.globalAlpha = 0.4
         this.ctx.beginPath()
-        this.ctx.moveTo(particle.trail[0].x, particle.trail[0].y)
-
-        for (let i = 1; i < particle.trail.length; i++) {
-          this.ctx.lineTo(particle.trail[i].x, particle.trail[i].y)
+        for (const particle of this.particles) {
+          this.ctx.moveTo(particle.prevX, particle.prevY)
+          this.ctx.lineTo(particle.x, particle.y)
         }
-
-        if (this.colorScheme === 'rainbow') {
-          this.ctx.strokeStyle = `hsla(${particle.hue}, 80%, 60%, ${particle.brightness * 0.4})`
-        } else {
-          this.ctx.strokeStyle = scheme.trail
-          this.ctx.globalAlpha = particle.brightness * 0.4
-        }
-        this.ctx.lineWidth = particle.size * 0.5
         this.ctx.stroke()
         this.ctx.globalAlpha = 1
       }
+    }
 
-      // Draw particle
-      this.ctx.beginPath()
-      this.ctx.arc(particle.x, particle.y, particle.size * (1 + bassEnergy), 0, Math.PI * 2)
+    // Draw all particles - batch by color when possible
+    const particleSize = 2 * (1 + bassEnergy)
 
-      if (this.colorScheme === 'rainbow') {
-        this.ctx.fillStyle = `hsl(${particle.hue}, 100%, ${60 + particle.brightness * 30}%)`
-        this.ctx.shadowColor = `hsl(${particle.hue}, 100%, 60%)`
-      } else {
-        this.ctx.fillStyle = scheme.particle
+    if (this.colorScheme === 'rainbow') {
+      // Rainbow needs individual colors but skip glow for performance
+      for (const particle of this.particles) {
+        this.ctx.beginPath()
+        this.ctx.arc(particle.x, particle.y, particle.size * (1 + bassEnergy * 0.5), 0, Math.PI * 2)
+        this.ctx.fillStyle = `hsl(${Math.round(particle.hue)}, 100%, ${60 + particle.brightness * 30}%)`
+        this.ctx.fill()
+      }
+    } else {
+      // Solid color - draw all particles with same color
+      this.ctx.fillStyle = scheme.particle
+
+      // Only add glow effect for small particle counts (expensive operation)
+      if (particleCount < 150) {
         this.ctx.shadowColor = scheme.particle
+        this.ctx.shadowBlur = 8
       }
 
-      this.ctx.shadowBlur = 5 + particle.brightness * 10
-      this.ctx.fill()
+      for (const particle of this.particles) {
+        this.ctx.beginPath()
+        this.ctx.arc(particle.x, particle.y, particle.size * (1 + bassEnergy * 0.5), 0, Math.PI * 2)
+        this.ctx.fill()
+      }
 
-      // Update hue
-      particle.hue = (particle.hue + 0.5) % 360
-
-      return true
-    })
-
-    this.ctx.shadowBlur = 0
+      this.ctx.shadowBlur = 0
+    }
     this.hue = (this.hue + 0.3) % 360
     this.time += 0.02
   }

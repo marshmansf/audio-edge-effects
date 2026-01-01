@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Audio Edge Effects is an Electron-based desktop application that displays audio visualizations as a transparent edge overlay on macOS (with Windows support). It captures system audio via BlackHole virtual audio driver and renders 46 different visualization modes across 8 categories.
+Audio Edge Effects is an Electron-based desktop application that displays audio visualizations as a transparent edge overlay on macOS (with Windows support). It captures system audio via BlackHole virtual audio driver and renders 45 different visualization modes across 9 categories.
 
 ## Build & Development Commands
 
@@ -42,7 +42,7 @@ npm run dist:win      # Windows (nsis, portable)
 - `index.html` - Main visualizer page
 - `index.ts` - App initialization, visualizer mode switching
 - `audio/capture.ts` - Audio device enumeration, BlackHole capture via Web Audio API
-- `visualizers/` - 46 visualization implementations across multiple files
+- `visualizers/` - 45 visualization implementations across multiple files
 
 **Settings Window:**
 - `settings.html` - Settings UI page
@@ -54,16 +54,17 @@ npm run dist:win      # Windows (nsis, portable)
 
 ## Visualization Categories
 
-46 visualizers organized in 8 categories:
+45 visualizers organized in 9 categories:
 
-1. **Spectrum** (8): spectrum, spectrum-cells, spectrum-bars, spectrum-circular, spectrum-flame, spectrum-waterfall, spectrum-peaks, spectrum-stack
-2. **Waveform** (8): waveform, waveform-bars, waveform-glow, waveform-bands, waveform-filled, waveform-ribbon, waveform-lissajous, waveform-phase
+1. **Spectrum** (8): spectrum, spectrum-cells, spectrum-bars, spectrum-circular (Spectrum Tubes), spectrum-flame, spectrum-waterfall, spectrum-peaks, spectrum-stack
+2. **Waveform** (7): waveform, waveform-bars, waveform-glow, waveform-bands, waveform-filled, waveform-ribbon, waveform-phase
 3. **Effects** (6): spectrogram, energy-bars, beat-pulse, particles, plasma, terrain
-4. **Geometric** (5): polygon-morph, spiral, hexagon-grid, constellation, mandala
-5. **Physics** (5): bouncing-balls, pendulum-wave, string-vibration, liquid, gravity-wells
-6. **Organic** (5): breathing-circle, tree-branches, lightning, fire, smoke-mist
-7. **Retro** (5): vu-meters, led-matrix, oscilloscope-crt, neon-signs, ascii-art
-8. **Abstract** (4): noise-field, color-field, glitch, moire
+4. **Geometric** (2): hexagon-grid, constellation
+5. **Corner** (5): polygon-morph, spiral, waveform-lissajous (Lissajous), mandala, breathing-circle - these render in screen corners based on edge position
+6. **Physics** (5): bouncing-balls, pendulum-wave, string-vibration, liquid, gravity-wells
+7. **Organic** (3): lightning, fire, smoke-mist
+8. **Retro** (5): vu-meters, led-matrix, oscilloscope-crt, neon-signs, ascii-art
+9. **Abstract** (4): noise-field, color-field, glitch, moire
 
 ## Key Technical Patterns
 

@@ -195,6 +195,9 @@ class AudioVisualizerApp {
       // Apply initial rotation based on this window's fixed position
       this.applyRotation(this.currentPosition)
 
+      // Apply initial opacity from settings
+      document.body.style.opacity = String(this.settings.opacity)
+
       // Check for audio devices
       const devices = await getAudioDevices()
       console.log('Available audio devices:', devices.map(d => d.label))

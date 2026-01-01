@@ -9,13 +9,14 @@ A real-time audio visualizer that displays as a transparent edge overlay on your
 
 - **Transparent Edge Overlay** - Sits on any screen edge (top, bottom, left, right) without interfering with your work
 - **Click-through** - Mouse events pass through to applications below
-- **46 Visualization Modes** across 8 categories:
-  - **Spectrum** - Classic bars, cells, circular, flame, waterfall, peaks, stack
-  - **Waveform** - Oscilloscope, bars, glow, bands, filled, ribbon, lissajous, phase
+- **45 Visualization Modes** across 9 categories:
+  - **Spectrum** - Classic bars, cells, tubes, flame, waterfall, peaks, stack
+  - **Waveform** - Oscilloscope, bars, glow, bands, filled, ribbon, phase
   - **Effects** - Spectrogram, energy bars, beat pulse, particles, plasma, terrain
-  - **Geometric** - Polygon morph, spiral, hexagon grid, constellation, mandala
+  - **Geometric** - Hexagon grid, constellation
+  - **Corner** - Polygon morph, spiral, lissajous, mandala, breathing circle (render in screen corners)
   - **Physics** - Bouncing balls, pendulum wave, string vibration, liquid, gravity wells
-  - **Organic** - Breathing circle, tree branches, lightning, fire, smoke/mist
+  - **Organic** - Lightning, fire, smoke/mist
   - **Retro** - VU meters, LED matrix, CRT oscilloscope, neon signs, ASCII art
   - **Abstract** - Noise field, color field, glitch, moire
 - **8 Color Schemes** - Classic green, Blue, Purple, Fire, Ice, Light, Dark, Rainbow
@@ -95,7 +96,7 @@ Access settings via:
 - **App menu** → **Settings...** (Cmd+, on macOS)
 
 Settings window options:
-- **Visualizer** - Choose from 46 visualization modes
+- **Visualizer** - Choose from 45 visualization modes
 - **Position** - Top, Bottom, Left, Right
 - **Size** - Small (40px), Medium (60px), Large (80px), Extra Large (120px)
 - **Density** - Control the number of elements in visualizations
