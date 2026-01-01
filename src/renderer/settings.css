@@ -100,8 +100,78 @@ h1 {
   gap: 4px;
 }
 
-.position-grid {
-  grid-template-columns: 1fr 1fr;
+/* Screen Preview Position Selector */
+.screen-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #0d1321;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.screen-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30%;
+  height: 20%;
+  background: #16213e;
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+.screen-zone {
+  position: absolute;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zone-top {
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 12px;
+  background: #2a3a5a;
+  border-radius: 0 0 3px 3px;
+}
+
+.zone-bottom {
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 12px;
+  background: #2a3a5a;
+  border-radius: 3px 3px 0 0;
+}
+
+.zone-left {
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 12px;
+  background: #2a3a5a;
+  border-radius: 0 3px 3px 0;
+}
+
+.zone-right {
+  right: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 12px;
+  background: #2a3a5a;
+  border-radius: 3px 0 0 3px;
+}
+
+.screen-zone:hover {
+  background: rgba(233, 69, 96, 0.5);
+}
+
+.screen-zone.active {
+  background: #e94560;
+  box-shadow: 0 0 8px rgba(233, 69, 96, 0.6);
 }
 
 .size-grid {

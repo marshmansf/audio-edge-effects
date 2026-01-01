@@ -21,7 +21,7 @@ interface Settings {
 
 class SettingsUI {
   private visualizerSelect: HTMLSelectElement
-  private positionButtons: NodeListOf<HTMLButtonElement>
+  private positionZones: NodeListOf<HTMLElement>
   private sizeButtons: NodeListOf<HTMLButtonElement>
   private densitySlider: HTMLInputElement
   private densityValue: HTMLSpanElement
@@ -31,7 +31,7 @@ class SettingsUI {
 
   constructor() {
     this.visualizerSelect = document.getElementById('visualizer') as HTMLSelectElement
-    this.positionButtons = document.querySelectorAll('[data-position]') as NodeListOf<HTMLButtonElement>
+    this.positionZones = document.querySelectorAll('.screen-zone[data-position]') as NodeListOf<HTMLElement>
     this.sizeButtons = document.querySelectorAll('[data-size]') as NodeListOf<HTMLButtonElement>
     this.densitySlider = document.getElementById('density') as HTMLInputElement
     this.densityValue = document.getElementById('density-value') as HTMLSpanElement
@@ -56,8 +56,8 @@ class SettingsUI {
     this.visualizerSelect.value = settings.visualizerMode
 
     // Position
-    this.positionButtons.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.position === settings.position)
+    this.positionZones.forEach(zone => {
+      zone.classList.toggle('active', zone.dataset.position === settings.position)
     })
 
     // Size
@@ -86,12 +86,12 @@ class SettingsUI {
       this.saveSetting('visualizerMode', this.visualizerSelect.value)
     })
 
-    // Position buttons
-    this.positionButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.positionButtons.forEach(b => b.classList.remove('active'))
-        btn.classList.add('active')
-        this.saveSetting('position', btn.dataset.position!)
+    // Position zones
+    this.positionZones.forEach(zone => {
+      zone.addEventListener('click', () => {
+        this.positionZones.forEach(z => z.classList.remove('active'))
+        zone.classList.add('active')
+        this.saveSetting('position', zone.dataset.position!)
       })
     })
 
