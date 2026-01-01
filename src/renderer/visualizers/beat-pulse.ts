@@ -7,6 +7,7 @@
 export interface BeatPulseOptions {
   container: HTMLElement
   colorScheme?: string
+  density?: number
 }
 
 // Color schemes
@@ -36,6 +37,7 @@ export class BeatPulseVisualizer {
   private dataArray: Uint8Array | null = null
   private animationId: number | null = null
   private colorScheme: string
+  private density: number
   private pulses: Pulse[] = []
   private lastBassEnergy: number = 0
   private beatThreshold: number = 0.15
@@ -55,6 +57,7 @@ export class BeatPulseVisualizer {
     this.ctx = ctx
 
     this.colorScheme = options.colorScheme || 'classic'
+    this.density = options.density ?? 64 // Default density
 
     this.handleResize()
     window.addEventListener('resize', () => this.handleResize())
@@ -108,25 +111,31 @@ export class BeatPulseVisualizer {
 
   private createPulse(energy: number): void {
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
-    let color: string
 
-    if (this.colorScheme === 'rainbow') {
-      color = `hsl(${this.hue}, 100%, 60%)`
-      this.hue = (this.hue + 30) % 360
-    } else {
-      color = Math.random() > 0.5 ? scheme.primary : scheme.secondary
+    // Density affects how many pulses are created per beat (1 to 4 pulses)
+    const pulseCount = Math.max(1, Math.floor(this.density / 32))
+
+    for (let i = 0; i < pulseCount; i++) {
+      let color: string
+
+      if (this.colorScheme === 'rainbow') {
+        color = `hsl(${this.hue}, 100%, 60%)`
+        this.hue = (this.hue + 30) % 360
+      } else {
+        color = Math.random() > 0.5 ? scheme.primary : scheme.secondary
+      }
+
+      this.pulses.push({
+        radius: i * 15, // Stagger initial radius for multiple pulses
+        maxRadius: Math.max(
+          this.canvas.width / window.devicePixelRatio,
+          this.canvas.height / window.devicePixelRatio
+        ) * 1.5,
+        alpha: 1.0 + energy * 0.3, // Increased intensity
+        color,
+        lineWidth: 8 + energy * 20 // Increased thickness
+      })
     }
-
-    this.pulses.push({
-      radius: 0,
-      maxRadius: Math.max(
-        this.canvas.width / window.devicePixelRatio,
-        this.canvas.height / window.devicePixelRatio
-      ) * 1.5,
-      alpha: 1.0 + energy * 0.3, // Increased intensity
-      color,
-      lineWidth: 8 + energy * 20 // Increased thickness
-    })
   }
 
   private draw = (): void => {
@@ -151,14 +160,27 @@ export class BeatPulseVisualizer {
 
     if (isBeat) {
       this.createPulse(energy)
-      this.cooldown = 4 // Shorter cooldown for more responsive beats
+      // Density affects cooldown: higher density = shorter cooldown = more responsive
+      // Range from 6 (low density) to 2 (high density)
+      this.cooldown = Math.max(2, Math.floor(8 - this.density / 24))
     }
 
     // Origin at bottom center (screen edge)
     const originX = width / 2
     const originY = height + 5
 
-    // Update and draw pulses
+    // Cap maximum pulses based on density to prevent performance degradation
+    const maxPulses = Math.floor(this.density / 4) + 10
+    if (this.pulses.length > maxPulses) {
+      // Remove oldest/faintest pulses
+      this.pulses.sort((a, b) => b.alpha - a.alpha)
+      this.pulses = this.pulses.slice(0, maxPulses)
+    }
+
+    // Group pulses by color for batched rendering
+    const pulsesByColor = new Map<string, Pulse[]>()
+
+    // Update pulses and group by color
     this.pulses = this.pulses.filter(pulse => {
       // Expand radius
       pulse.radius += 8 + (pulse.lineWidth / 2)
@@ -171,36 +193,57 @@ export class BeatPulseVisualizer {
         return false
       }
 
-      // Draw arc (semicircle from bottom)
-      this.ctx.beginPath()
-      this.ctx.arc(originX, originY, pulse.radius, Math.PI, 0)
-      this.ctx.strokeStyle = pulse.color
-      this.ctx.lineWidth = pulse.lineWidth * (0.5 + pulse.alpha * 0.5) // Maintain thickness longer
-      this.ctx.globalAlpha = Math.min(1, pulse.alpha * 1.2) // Boost alpha
-
-      // Add stronger glow
-      this.ctx.shadowBlur = 30 + pulse.lineWidth
-      this.ctx.shadowColor = pulse.color
-
-      this.ctx.stroke()
-
-      // Draw a second, inner ring for more impact
-      if (pulse.alpha > 0.3) {
-        this.ctx.beginPath()
-        this.ctx.arc(originX, originY, pulse.radius * 0.92, Math.PI, 0)
-        this.ctx.lineWidth = pulse.lineWidth * 0.4
-        this.ctx.globalAlpha = pulse.alpha * 0.6
-        this.ctx.stroke()
+      // Group by color for batched drawing
+      if (!pulsesByColor.has(pulse.color)) {
+        pulsesByColor.set(pulse.color, [])
       }
+      pulsesByColor.get(pulse.color)!.push(pulse)
 
       return true
     })
+
+    // Draw all pulses batched by color (reduces context state changes)
+    // Use single shadow setting for all pulses of same color
+    for (const [color, pulses] of pulsesByColor) {
+      // Set shadow once per color group
+      this.ctx.shadowColor = color
+      this.ctx.shadowBlur = 20 // Fixed moderate blur instead of per-pulse
+      this.ctx.strokeStyle = color
+
+      // Draw glow layer first (thicker, more transparent)
+      for (const pulse of pulses) {
+        this.ctx.beginPath()
+        this.ctx.arc(originX, originY, pulse.radius, Math.PI, 0)
+        this.ctx.lineWidth = pulse.lineWidth * 1.5
+        this.ctx.globalAlpha = pulse.alpha * 0.4
+        this.ctx.stroke()
+      }
+
+      // Draw main layer (no shadow needed, glow layer provides it)
+      this.ctx.shadowBlur = 0
+      for (const pulse of pulses) {
+        this.ctx.beginPath()
+        this.ctx.arc(originX, originY, pulse.radius, Math.PI, 0)
+        this.ctx.lineWidth = pulse.lineWidth * (0.5 + pulse.alpha * 0.5)
+        this.ctx.globalAlpha = Math.min(1, pulse.alpha * 1.2)
+        this.ctx.stroke()
+
+        // Draw inner ring for high-alpha pulses
+        if (pulse.alpha > 0.3) {
+          this.ctx.beginPath()
+          this.ctx.arc(originX, originY, pulse.radius * 0.92, Math.PI, 0)
+          this.ctx.lineWidth = pulse.lineWidth * 0.4
+          this.ctx.globalAlpha = pulse.alpha * 0.6
+          this.ctx.stroke()
+        }
+      }
+    }
 
     // Reset context state
     this.ctx.globalAlpha = 1
     this.ctx.shadowBlur = 0
 
-    // Draw constant subtle ambient energy indicator - more visible
+    // Draw constant subtle ambient energy indicator
     const scheme = colorSchemes[this.colorScheme] || colorSchemes.classic
     const ambientRadius = 30 + energy * 120
     const ambientAlpha = 0.15 + energy * 0.35
@@ -210,7 +253,7 @@ export class BeatPulseVisualizer {
     this.ctx.strokeStyle = scheme.primary
     this.ctx.lineWidth = 4 + energy * 4
     this.ctx.globalAlpha = ambientAlpha
-    this.ctx.shadowBlur = 15 + energy * 10
+    this.ctx.shadowBlur = 12 // Reduced from 15 + energy * 10
     this.ctx.shadowColor = scheme.primary
     this.ctx.stroke()
 

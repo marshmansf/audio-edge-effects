@@ -550,7 +550,8 @@ class AudioVisualizerApp {
       case 'beat-pulse':
         this.beatPulseVisualizer = new BeatPulseVisualizer({
           container: this.container,
-          colorScheme: colorScheme
+          colorScheme: colorScheme,
+          density: density
         })
         this.beatPulseVisualizer.init(this.audioCapture.analyser)
         break
