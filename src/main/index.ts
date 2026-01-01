@@ -1,4 +1,4 @@
-import { app, ipcMain, session, globalShortcut } from 'electron'
+import { app, ipcMain, session, globalShortcut, screen } from 'electron'
 import { createWindows, broadcastToOverlays, syncOverlayWindows, setHeight, getFirstOverlayWindow } from './window'
 import { createTray, updateTrayMenu } from './tray'
 import { getSettings, setSetting, togglePosition } from './store'
@@ -70,6 +70,11 @@ app.on('activate', () => {
 // IPC handlers
 ipcMain.handle('get-settings', () => {
   return getSettings()
+})
+
+ipcMain.handle('get-screen-size', () => {
+  const primaryDisplay = screen.getPrimaryDisplay()
+  return primaryDisplay.size
 })
 
 ipcMain.handle('set-setting', (_event, key: string, value: unknown) => {

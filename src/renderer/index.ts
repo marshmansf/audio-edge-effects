@@ -52,6 +52,7 @@ declare global {
     electronAPI: {
       getSettings: () => Promise<Settings>
       setSetting: (key: string, value: unknown) => Promise<boolean>
+      getScreenSize: () => Promise<{ width: number; height: number }>
       togglePosition: (position: string) => Promise<string[]>
       getWindowPosition: () => string
       onVisualizerModeChanged: (callback: (mode: string) => void) => void
@@ -172,6 +173,7 @@ class AudioVisualizerApp {
   private currentMode: VisualizerMode = 'spectrum'
   private currentPosition: EdgePosition = 'bottom'
   private settings: Settings | null = null
+  private screenSize: { width: number; height: number } = { width: 1920, height: 1080 }
 
   constructor() {
     this.container = document.getElementById('visualizer-container')!
@@ -181,8 +183,9 @@ class AudioVisualizerApp {
 
   async init(): Promise<void> {
     try {
-      // Load settings
+      // Load settings and screen size
       this.settings = await window.electronAPI.getSettings()
+      this.screenSize = await window.electronAPI.getScreenSize()
       this.currentMode = this.settings.visualizerMode
 
       // Get this window's position from URL query parameter (each window has a fixed position)
@@ -445,7 +448,13 @@ class AudioVisualizerApp {
 
     const colorScheme = this.settings?.colorScheme || 'classic'
     const color = waveformColorMap[colorScheme] || '#00ff00'
-    const density = this.settings?.density || 256
+    const baseDensity = this.settings?.density || 256
+
+    // Scale density for left/right positions to maintain visual equivalence
+    // Left/right edges span screen height, top/bottom span screen width
+    const density = (this.currentPosition === 'left' || this.currentPosition === 'right')
+      ? Math.round(baseDensity * this.screenSize.height / this.screenSize.width)
+      : baseDensity
 
     switch (this.currentMode) {
       case 'spectrum':

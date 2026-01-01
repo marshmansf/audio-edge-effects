@@ -51,10 +51,10 @@ export class AsciiArtVisualizer {
   }
 
   private handleResize(): void {
-    const rect = this.canvas.parentElement?.getBoundingClientRect()
-    if (rect) {
-      this.canvas.width = rect.width * window.devicePixelRatio
-      this.canvas.height = rect.height * window.devicePixelRatio
+    const parent = this.canvas.parentElement
+    if (parent) {
+      this.canvas.width = parent.offsetWidth * window.devicePixelRatio
+      this.canvas.height = parent.offsetHeight * window.devicePixelRatio
       this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
 
       // Calculate optimal cols/rows based on size and baseCols

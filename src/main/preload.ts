@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('set-setting', key, value),
+  getScreenSize: () => ipcRenderer.invoke('get-screen-size'),
 
   // Toggle a position on/off (for multi-edge support)
   togglePosition: (position: string) => ipcRenderer.invoke('toggle-position', position),
