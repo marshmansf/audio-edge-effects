@@ -26,7 +26,6 @@ export interface Settings {
   height: number
   opacity: number
   visualizerMode: VisualizerMode
-  audioDeviceId: string | null
   colorScheme: string
   density: number
   showPeaks: boolean
@@ -38,22 +37,15 @@ export const defaultSettings: Settings = {
   height: 60,
   opacity: 0.85,
   visualizerMode: 'spectrum',
-  audioDeviceId: null,
   colorScheme: 'classic',
   density: 256,
   showPeaks: true
-}
-
-export interface AudioDevice {
-  deviceId: string
-  label: string
 }
 
 // IPC channel names
 export const IPC = {
   GET_SETTINGS: 'get-settings',
   SET_SETTINGS: 'set-settings',
-  GET_AUDIO_DEVICES: 'get-audio-devices',
   TOGGLE_VISUALIZER: 'toggle-visualizer',
   SET_POSITION: 'set-position',
   SET_OPACITY: 'set-opacity',

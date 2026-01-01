@@ -5,54 +5,26 @@ export interface AudioCaptureResult {
   source: MediaStreamAudioSourceNode
 }
 
-export async function getAudioDevices(): Promise<MediaDeviceInfo[]> {
-  const devices = await navigator.mediaDevices.enumerateDevices()
-  return devices.filter(device => device.kind === 'audioinput')
-}
+/**
+ * Capture system audio using ScreenCaptureKit via getDisplayMedia.
+ * Requires macOS 13.2+ - the main process enables the necessary Chromium flags.
+ */
+export async function captureSystemAudio(): Promise<AudioCaptureResult> {
+  // Request display media with audio and video
+  // Video is required by getDisplayMedia, but we only use the audio track
+  const stream = await navigator.mediaDevices.getDisplayMedia({
+    audio: true,
+    video: true
+  })
 
-export async function findBlackHoleDevice(): Promise<MediaDeviceInfo | null> {
-  const devices = await getAudioDevices()
+  // Stop video tracks - we only need audio
+  stream.getVideoTracks().forEach(track => track.stop())
 
-  // Look for BlackHole device
-  const blackhole = devices.find(d =>
-    d.label.toLowerCase().includes('blackhole')
-  )
-
-  if (blackhole) {
-    return blackhole
+  // Check if we got an audio track
+  const audioTracks = stream.getAudioTracks()
+  if (audioTracks.length === 0) {
+    throw new Error('NO_AUDIO_TRACK')
   }
-
-  // Fallback: look for any virtual audio device or loopback
-  const virtualDevice = devices.find(d =>
-    d.label.toLowerCase().includes('loopback') ||
-    d.label.toLowerCase().includes('virtual') ||
-    d.label.toLowerCase().includes('soundflower')
-  )
-
-  return virtualDevice || null
-}
-
-export async function captureAudio(deviceId?: string): Promise<AudioCaptureResult> {
-  // If no device specified, try to find BlackHole
-  let targetDeviceId = deviceId
-
-  if (!targetDeviceId) {
-    const blackhole = await findBlackHoleDevice()
-    if (blackhole) {
-      targetDeviceId = blackhole.deviceId
-      console.log('Found audio device:', blackhole.label)
-    }
-  }
-
-  // Request audio stream
-  const constraints: MediaStreamConstraints = {
-    audio: targetDeviceId
-      ? { deviceId: { exact: targetDeviceId } }
-      : true,
-    video: false
-  }
-
-  const stream = await navigator.mediaDevices.getUserMedia(constraints)
 
   // Create audio context and analyser
   const audioContext = new AudioContext()

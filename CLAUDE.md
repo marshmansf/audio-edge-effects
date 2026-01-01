@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Audio Edge Effects is an Electron-based desktop application that displays audio visualizations as a transparent edge overlay on macOS (with Windows support). It captures system audio via BlackHole virtual audio driver and renders 45 different visualization modes across 9 categories.
+Audio Edge Effects is an Electron-based desktop application that displays audio visualizations as a transparent edge overlay on macOS (with Windows support). It captures system audio via macOS ScreenCaptureKit (requires macOS 13.2+) and renders 45 different visualization modes across 9 categories.
 
 ## Build & Development Commands
 
@@ -41,7 +41,7 @@ npm run dist:win      # Windows (nsis, portable)
 **Main Visualizer Window:**
 - `index.html` - Main visualizer page
 - `index.ts` - App initialization, visualizer mode switching
-- `audio/capture.ts` - Audio device enumeration, BlackHole capture via Web Audio API
+- `audio/capture.ts` - System audio capture via ScreenCaptureKit and Web Audio API
 - `visualizers/` - 45 visualization implementations across multiple files
 
 **Settings Window:**
@@ -69,7 +69,7 @@ npm run dist:win      # Windows (nsis, portable)
 ## Key Technical Patterns
 
 ### Audio Capture
-The app uses `navigator.mediaDevices.getUserMedia()` to capture from BlackHole virtual audio device. The audio stream is connected to a Web Audio API `AnalyserNode` for FFT data.
+The app uses macOS ScreenCaptureKit via `navigator.mediaDevices.getDisplayMedia()` for system audio loopback capture. This requires macOS 13.2+ and uses Chromium feature flags (`MacLoopbackAudioForScreenShare`, `MacSckSystemAudioLoopbackOverride`). The audio stream is connected to a Web Audio API `AnalyserNode` for FFT data.
 
 ### Transparent Overlay Window
 ```typescript
@@ -109,10 +109,8 @@ Stored via electron-store:
 - `opacity` - Window opacity (0.1 to 1.0)
 - `colorScheme` - Color theme (classic, blue, purple, fire, ice, rainbow, light, dark)
 
-## User Setup Requirement
+## System Requirements
 
-Users must install BlackHole and configure a Multi-Output Device:
-1. `brew install blackhole-2ch`
-2. Audio MIDI Setup → Create Multi-Output Device
-3. Add Built-in Output + BlackHole 2ch
-4. Set Multi-Output Device as system output
+- **macOS 13.2+** (Ventura or later) - Required for ScreenCaptureKit audio loopback
+- On first launch, grant "Screen & System Audio Recording" permission when prompted
+- After granting permission, restart the app

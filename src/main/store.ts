@@ -20,7 +20,6 @@ export function getSettings(): Settings {
     height: store.get('height'),
     opacity: store.get('opacity'),
     visualizerMode: store.get('visualizerMode'),
-    audioDeviceId: store.get('audioDeviceId'),
     colorScheme: store.get('colorScheme'),
     density: store.get('density'),
     showPeaks: store.get('showPeaks')

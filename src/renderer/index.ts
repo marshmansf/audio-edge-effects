@@ -1,4 +1,4 @@
-import { captureAudio, AudioCaptureResult, getAudioDevices, findBlackHoleDevice } from './audio/capture'
+import { captureSystemAudio, AudioCaptureResult } from './audio/capture'
 import { SpectrumVisualizer } from './visualizers/spectrum'
 import { SpectrumCellsVisualizer } from './visualizers/spectrum-cells'
 import { SpectrumBarsVisualizer } from './visualizers/spectrum-bars'
@@ -88,7 +88,6 @@ interface Settings {
   height: number
   opacity: number
   visualizerMode: VisualizerMode
-  audioDeviceId: string | null
   colorScheme: string
   density: number
   showPeaks: boolean
@@ -198,20 +197,9 @@ class AudioVisualizerApp {
       // Apply initial opacity from settings
       document.body.style.opacity = String(this.settings.opacity)
 
-      // Check for audio devices
-      const devices = await getAudioDevices()
-      console.log('Available audio devices:', devices.map(d => d.label))
-
-      const blackhole = await findBlackHoleDevice()
-      if (!blackhole) {
-        this.showStatus('No BlackHole device found. Please install BlackHole and configure Multi-Output Device.')
-        return
-      }
-
-      // Capture audio
-      this.audioCapture = await captureAudio(
-        this.settings.audioDeviceId || blackhole.deviceId
-      )
+      // Capture system audio via ScreenCaptureKit
+      // The main process enables the necessary Chromium flags based on OS version
+      this.audioCapture = await captureSystemAudio()
 
       // Initialize visualizer
       await this.initVisualizer()
@@ -221,9 +209,11 @@ class AudioVisualizerApp {
       console.error('Failed to initialize:', error)
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
-          this.showStatus('Microphone permission denied. Please allow access in System Preferences.')
-        } else if (error.name === 'NotFoundError') {
-          this.showStatus('No audio input device found. Please check your audio configuration.')
+          this.showStatus('Please grant "Screen & System Audio Recording" permission in System Settings > Privacy & Security, then restart the app.')
+        } else if (error.message === 'NO_AUDIO_TRACK') {
+          this.showStatus('Failed to capture system audio. Please check System Settings > Privacy & Security > Screen & System Audio Recording.')
+        } else if (error.name === 'NotSupportedError' || error.message.includes('getDisplayMedia')) {
+          this.showStatus('System audio capture not supported. This app requires macOS 13.2 or later.')
         } else {
           this.showStatus(`Error: ${error.message}`)
         }

@@ -1,8 +1,18 @@
-import { app, ipcMain, session, globalShortcut, screen } from 'electron'
+import { app, ipcMain, session, globalShortcut, screen, desktopCapturer } from 'electron'
 import { createWindows, broadcastToOverlays, syncOverlayWindows, setHeight, getFirstOverlayWindow } from './window'
 import { createTray, updateTrayMenu } from './tray'
 import { getSettings, setSetting, togglePosition } from './store'
 import { VisualizerMode, EdgePosition } from '../shared/types'
+import * as os from 'os'
+
+// Enable ScreenCaptureKit for system audio loopback on macOS 13.2+
+if (process.platform === 'darwin') {
+  const macVersion = os.release().split('.').map(Number)
+  // Darwin 22.4+ corresponds to macOS 13.2+
+  if (macVersion[0] >= 22 && (macVersion[0] > 22 || macVersion[1] >= 4)) {
+    app.commandLine.appendSwitch('enable-features', 'MacLoopbackAudioForScreenShare,MacSckSystemAudioLoopbackOverride')
+  }
+}
 
 // All visualizer modes in order for debug navigation
 const ALL_VISUALIZER_MODES: VisualizerMode[] = [
@@ -33,7 +43,19 @@ if (!gotTheLock) {
 }
 
 app.whenReady().then(() => {
-  // Request microphone permission for audio capture
+  // Set up display media request handler for system audio loopback via ScreenCaptureKit
+  session.defaultSession.setDisplayMediaRequestHandler(async (request, callback) => {
+    // Get desktop sources - we need to provide a video source even for audio-only capture
+    const sources = await desktopCapturer.getSources({ types: ['screen'] })
+    if (sources.length === 0) {
+      callback({})
+      return
+    }
+    // Return the first screen source with loopback audio
+    callback({ video: sources[0], audio: 'loopback' })
+  })
+
+  // Request media permission for audio capture
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
     if (permission === 'media') {
       callback(true)

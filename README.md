@@ -24,22 +24,15 @@ A real-time audio visualizer that displays as a transparent edge overlay on your
 - **Customizable** - Adjust position, size, density, and opacity
 - **System Audio Capture** - Visualizes any audio playing on your computer
 
-## Prerequisites
+## System Requirements
 
 ### macOS
 
-This app requires [BlackHole](https://github.com/ExistentialAudio/BlackHole) to capture system audio:
+- **macOS 13.2 (Ventura) or later** is required
+- On first launch, grant **"Screen & System Audio Recording"** permission when prompted
+- Restart the app after granting permission
 
-```bash
-brew install blackhole-2ch
-```
-
-Then configure audio routing:
-
-1. Open **Audio MIDI Setup** (Spotlight → "Audio MIDI Setup")
-2. Click **+** → **Create Multi-Output Device**
-3. Check both **Built-in Output** (or your headphones) and **BlackHole 2ch**
-4. Right-click the Multi-Output Device → **Use This Device For Sound Output**
+The app uses macOS ScreenCaptureKit to capture system audio natively - no additional audio drivers needed.
 
 ### Windows
 
