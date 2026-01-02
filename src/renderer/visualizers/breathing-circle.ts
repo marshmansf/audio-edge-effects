@@ -115,17 +115,17 @@ export class BreathingCircleVisualizer {
         centerX = width - maxRadius * 1.1
         centerY = height - maxRadius * 1.1
         break
-      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
-        centerX = maxRadius * 1.1
+      case 'right': // bottom right corner - after rotate(-90deg)
+        centerX = maxRadius * 1.1 + height / 4 - 5
         centerY = height - maxRadius * 1.1
         break
       case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
         centerX = maxRadius * 1.1
         centerY = height - maxRadius * 1.1
         break
-      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+      case 'left': // top left corner - after rotate(90deg), use bottom-left canvas
         centerX = maxRadius * 1.1
-        centerY = maxRadius * 1.1
+        centerY = height - maxRadius * 1.1
         break
       default:
         centerX = width / 2

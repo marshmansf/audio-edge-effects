@@ -104,17 +104,17 @@ export class WaveformLissajousVisualizer {
         centerX = width - size * 1.1
         centerY = height - size * 1.1
         break
-      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
-        centerX = size * 1.1
+      case 'right': // bottom right corner - after rotate(-90deg)
+        centerX = size * 1.1 + height / 4 - 5
         centerY = height - size * 1.1
         break
       case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
         centerX = size * 1.1
         centerY = height - size * 1.1
         break
-      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+      case 'left': // top left corner - after rotate(90deg), use bottom-left canvas
         centerX = size * 1.1
-        centerY = size * 1.1
+        centerY = height - size * 1.1
         break
       default:
         centerX = width / 2

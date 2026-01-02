@@ -151,17 +151,17 @@ export class PolygonMorphVisualizer {
         centerX = width - maxRadius * 0.9
         centerY = height - maxRadius * 0.9
         break
-      case 'right': // bottom right corner - after rotate(-90deg), use bottom-left canvas
-        centerX = maxRadius * 0.9
+      case 'right': // bottom right corner - after rotate(-90deg)
+        centerX = maxRadius * 0.9 + height / 4 - 5
         centerY = height - maxRadius * 0.9
         break
       case 'bottom': // bottom left corner - no rotation, use bottom-left canvas
         centerX = maxRadius * 0.9
         centerY = height - maxRadius * 0.9
         break
-      case 'left': // top left corner - after rotate(90deg), use top-left canvas
+      case 'left': // top left corner - after rotate(90deg), use bottom-left canvas
         centerX = maxRadius * 0.9
-        centerY = maxRadius * 0.9
+        centerY = height - maxRadius * 0.9
         break
       default:
         centerX = width / 2
