@@ -11,9 +11,10 @@ let isVisible = true
 function createOverlayWindow(position: EdgePosition): BrowserWindow {
   const settings = getSettings()
   const primaryDisplay = screen.getPrimaryDisplay()
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.size
+  // Use workArea to account for taskbar/dock
+  const { width: screenWidth, height: screenHeight, x: workAreaX, y: workAreaY } = primaryDisplay.workArea
 
-  const windowConfig = getWindowConfig(position, screenWidth, screenHeight, settings.height)
+  const windowConfig = getWindowConfig(position, screenWidth, screenHeight, settings.height, workAreaX, workAreaY)
 
   const win = new BrowserWindow({
     ...windowConfig,
@@ -95,27 +96,27 @@ export function broadcastToOverlays(channel: string, ...args: unknown[]): void {
   }
 }
 
-function getWindowConfig(position: EdgePosition, screenWidth: number, screenHeight: number, height: number) {
+function getWindowConfig(position: EdgePosition, screenWidth: number, screenHeight: number, height: number, workAreaX = 0, workAreaY = 0) {
   switch (position) {
     case 'top':
-      return { x: 0, y: 0, width: screenWidth, height }
+      return { x: workAreaX, y: workAreaY, width: screenWidth, height }
     case 'bottom':
-      return { x: 0, y: screenHeight - height, width: screenWidth, height }
+      return { x: workAreaX, y: workAreaY + screenHeight - height, width: screenWidth, height }
     case 'left':
-      return { x: 0, y: 0, width: height, height: screenHeight }
+      return { x: workAreaX, y: workAreaY, width: height, height: screenHeight }
     case 'right':
-      return { x: screenWidth - height, y: 0, width: height, height: screenHeight }
+      return { x: workAreaX + screenWidth - height, y: workAreaY, width: height, height: screenHeight }
     default:
-      return { x: 0, y: screenHeight - height, width: screenWidth, height }
+      return { x: workAreaX, y: workAreaY + screenHeight - height, width: screenWidth, height }
   }
 }
 
 export function setHeight(height: number): void {
   const primaryDisplay = screen.getPrimaryDisplay()
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.size
+  const { width: screenWidth, height: screenHeight, x: workAreaX, y: workAreaY } = primaryDisplay.workArea
 
   for (const [position, win] of overlayWindows) {
-    const config = getWindowConfig(position, screenWidth, screenHeight, height)
+    const config = getWindowConfig(position, screenWidth, screenHeight, height, workAreaX, workAreaY)
     win.setBounds(config)
   }
   setSetting('height', height)

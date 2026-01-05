@@ -14,6 +14,11 @@ if (process.platform === 'darwin') {
   }
 }
 
+// Disable GPU cache to avoid conflicts on Windows
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('disable-gpu-shader-disk-cache')
+}
+
 // All visualizer modes in order for debug navigation
 const ALL_VISUALIZER_MODES: VisualizerMode[] = [
   // Spectrum
@@ -35,6 +40,9 @@ const ALL_VISUALIZER_MODES: VisualizerMode[] = [
   // Abstract
   'noise-field', 'color-field', 'glitch', 'moire'
 ]
+
+// Track if we're still initializing (prevents early quit on Windows)
+let isInitializing = true
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock()
@@ -69,6 +77,9 @@ app.whenReady().then(() => {
 
   // Register debug shortcuts if enabled
   registerDebugShortcuts()
+
+  // Mark initialization as complete
+  isInitializing = false
 })
 
 app.on('will-quit', () => {
@@ -76,9 +87,9 @@ app.on('will-quit', () => {
   globalShortcut.unregisterAll()
 })
 
-// Quit when all windows are closed (except on macOS)
+// Quit when all windows are closed (except on macOS or during init)
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (process.platform !== 'darwin' && !isInitializing) {
     app.quit()
   }
 })
