@@ -7,6 +7,10 @@ A real-time audio visualizer that displays as a transparent edge overlay on your
 
 ## Features
 
+https://github.com/user-attachments/assets/demo.mp4
+
+*Demo video showing various visualization modes*
+
 - **Transparent Edge Overlay** - Sits on any screen edge (top, bottom, left, right) without interfering with your work
 - **Click-through** - Mouse events pass through to applications below
 - **45 Visualization Modes** across 9 categories:
