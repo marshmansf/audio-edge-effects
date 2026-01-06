@@ -47,3 +47,9 @@ config.json
 *.tmp
 *.temp
 .cache/
+
+# Generated TypeScript files
+src/shared/*.js
+src/shared/*.js.map
+src/shared/*.d.ts
+src/shared/*.d.ts.map
