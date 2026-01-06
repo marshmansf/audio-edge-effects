@@ -44,9 +44,28 @@ On Windows, the app can capture system audio directly via WASAPI loopback (no ad
 
 ## Installation
 
+### Download (Recommended)
+
+Download the latest release from [GitHub Releases](https://github.com/marshmansf/audio-edge-effects/releases).
+
+#### macOS
+
+1. Download the `.dmg` file
+2. Open it and drag **Audio Edge Effects** to Applications
+3. **Important:** Before first launch, open Terminal and run:
+   ```bash
+   xattr -cr /Applications/Audio\ Edge\ Effects.app
+   ```
+4. Launch the app and grant Screen & System Audio Recording permission when prompted
+5. Restart the app after granting permission
+
+> **Note:** The `xattr` step is required because the app is not code-signed with an Apple Developer certificate. macOS blocks unsigned apps downloaded from the internet.
+
+### Build from Source
+
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/audio-edge-effects.git
+git clone https://github.com/marshmansf/audio-edge-effects.git
 cd audio-edge-effects
 
 # Install dependencies
