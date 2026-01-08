@@ -4,6 +4,8 @@
  * Transparent background
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface MandalaOptions {
   container: HTMLElement
   colorScheme?: string
@@ -34,7 +36,7 @@ export class MandalaVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private symmetry: number
   private position: 'top' | 'bottom' | 'left' | 'right'
@@ -83,7 +85,8 @@ export class MandalaVisualizer {
   init(analyser: AnalyserNode): void {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private drawPetal(cx: number, cy: number, radius: number, petal: Petal, energy: number, colorIndex: number): void {
@@ -136,8 +139,6 @@ export class MandalaVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -257,8 +258,9 @@ export class MandalaVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

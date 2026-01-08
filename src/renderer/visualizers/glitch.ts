@@ -4,6 +4,8 @@
  * Beat triggers glitch intensity
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface GlitchOptions {
   container: HTMLElement
   colorScheme?: string
@@ -36,7 +38,7 @@ export class GlitchVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private intensity: number
   private glitchBlocks: GlitchBlock[] = []
@@ -74,7 +76,8 @@ export class GlitchVisualizer {
   init(analyser: AnalyserNode): void {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private createGlitchBlock(width: number, height: number): void {
@@ -94,8 +97,6 @@ export class GlitchVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -279,8 +280,9 @@ export class GlitchVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

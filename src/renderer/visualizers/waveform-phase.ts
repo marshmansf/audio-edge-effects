@@ -3,6 +3,8 @@
  * Shows phase relationship between frequency bands as interweaving sine waves
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface WaveformPhaseOptions {
   container: HTMLElement
   colorScheme?: string
@@ -31,7 +33,7 @@ export class WaveformPhaseVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private bandCount: number
   private bands: Band[] = []
@@ -76,13 +78,12 @@ export class WaveformPhaseVisualizer {
   init(analyser: AnalyserNode): void {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -156,8 +157,9 @@ export class WaveformPhaseVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

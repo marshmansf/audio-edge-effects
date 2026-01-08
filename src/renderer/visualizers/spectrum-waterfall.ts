@@ -4,6 +4,8 @@
  * Newest at bottom, pushing older rows up
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface SpectrumWaterfallOptions {
   container: HTMLElement
   colorScheme?: string
@@ -26,7 +28,7 @@ export class SpectrumWaterfallVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private history: number[][] = []
   private maxHistory: number = 60
@@ -63,7 +65,8 @@ export class SpectrumWaterfallVisualizer {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     this.history = []
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private getColor(value: number, rowIndex: number): string {
@@ -116,8 +119,6 @@ export class SpectrumWaterfallVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -183,8 +184,9 @@ export class SpectrumWaterfallVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

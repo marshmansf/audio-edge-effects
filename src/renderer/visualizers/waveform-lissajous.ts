@@ -3,6 +3,8 @@
  * X/Y oscilloscope mode - creates spiraling patterns from audio
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface WaveformLissajousOptions {
   container: HTMLElement
   colorScheme?: string
@@ -27,7 +29,7 @@ export class WaveformLissajousVisualizer {
   private analyser: AnalyserNode | null = null
   private timeData: Uint8Array | null = null
   private freqData: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private detail: number
   private position: 'top' | 'bottom' | 'left' | 'right'
@@ -77,13 +79,12 @@ export class WaveformLissajousVisualizer {
     this.analyser = analyser
     this.timeData = new Uint8Array(analyser.fftSize)
     this.freqData = new Uint8Array(analyser.frequencyBinCount)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private draw = (): void => {
     if (!this.analyser || !this.timeData || !this.freqData) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteTimeDomainData(this.timeData)
     this.analyser.getByteFrequencyData(this.freqData)
@@ -236,8 +237,9 @@ export class WaveformLissajousVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

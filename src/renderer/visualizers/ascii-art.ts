@@ -3,6 +3,8 @@
  * Spectrum rendered as updating ASCII characters
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface AsciiArtOptions {
   container: HTMLElement
   colorScheme?: string
@@ -25,7 +27,7 @@ export class AsciiArtVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private asciiChars: string = ' .,:;!|\\/*+<>[]{}()#&%@$'
   private baseCols: number
@@ -71,7 +73,8 @@ export class AsciiArtVisualizer {
   init(analyser: AnalyserNode): void {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private getAsciiChar(value: number): string {
@@ -81,8 +84,6 @@ export class AsciiArtVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -156,8 +157,9 @@ export class AsciiArtVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

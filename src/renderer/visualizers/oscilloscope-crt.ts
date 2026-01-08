@@ -3,6 +3,8 @@
  * Green phosphor look with bloom, scanlines, and CRT effects
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface OscilloscopeCrtOptions {
   container: HTMLElement
   colorScheme?: string
@@ -24,7 +26,7 @@ export class OscilloscopeCrtVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private phosphorPersistence: ImageData | null = null
   private hue: number = 0
@@ -59,7 +61,8 @@ export class OscilloscopeCrtVisualizer {
   init(analyser: AnalyserNode): void {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.fftSize)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private drawGrid(width: number, height: number): void {
@@ -115,8 +118,6 @@ export class OscilloscopeCrtVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteTimeDomainData(this.dataArray)
 
@@ -216,8 +217,9 @@ export class OscilloscopeCrtVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

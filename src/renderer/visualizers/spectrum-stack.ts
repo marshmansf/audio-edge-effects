@@ -3,6 +3,8 @@
  * Historical frequency bars in 3D perspective (mountain ridges receding into distance)
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface SpectrumStackOptions {
   container: HTMLElement
   colorScheme?: string
@@ -25,7 +27,7 @@ export class SpectrumStackVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private resolution: number
   private history: number[][] = []
@@ -62,7 +64,8 @@ export class SpectrumStackVisualizer {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     this.history = []
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private interpolateColor(color1: string, color2: string, factor: number): string {
@@ -87,8 +90,6 @@ export class SpectrumStackVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -196,8 +197,9 @@ export class SpectrumStackVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

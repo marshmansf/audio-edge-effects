@@ -3,6 +3,8 @@
  * Classic analog VU meter needles with realistic inertia
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface VuMetersOptions {
   container: HTMLElement
   colorScheme?: string
@@ -32,7 +34,7 @@ export class VuMetersVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private meters: VuMeter[] = []
   private hue: number = 0
@@ -71,7 +73,8 @@ export class VuMetersVisualizer {
   init(analyser: AnalyserNode): void {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private drawMeter(centerX: number, centerY: number, radius: number, meter: VuMeter, label: string): void {
@@ -184,8 +187,6 @@ export class VuMetersVisualizer {
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
 
-    this.animationId = requestAnimationFrame(this.draw)
-
     this.analyser.getByteFrequencyData(this.dataArray)
 
     const width = this.canvas.width / window.devicePixelRatio
@@ -261,8 +262,9 @@ export class VuMetersVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

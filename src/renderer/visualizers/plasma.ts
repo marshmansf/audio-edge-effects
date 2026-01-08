@@ -4,6 +4,8 @@
  * Each wave segment responds to different frequency bins
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface PlasmaOptions {
   container: HTMLElement
   colorScheme?: string
@@ -26,7 +28,7 @@ export class PlasmaVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private phase: number = 0
   private waveCount: number = 6
@@ -62,7 +64,8 @@ export class PlasmaVisualizer {
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     // Initialize smoothed bins for 32 frequency segments
     this.smoothedBins = new Array(32).fill(0)
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private getFrequencyEnergy(lowPercent: number, highPercent: number): number {
@@ -80,8 +83,6 @@ export class PlasmaVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -229,8 +230,9 @@ export class PlasmaVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

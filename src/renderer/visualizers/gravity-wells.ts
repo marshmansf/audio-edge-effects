@@ -4,6 +4,8 @@
  * Transparent background with more dramatic audio reactivity
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface GravityWellsOptions {
   container: HTMLElement
   colorScheme?: string
@@ -47,7 +49,7 @@ export class GravityWellsVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private particles: Particle[] = []
   private wells: GravityWell[] = []
@@ -115,7 +117,8 @@ export class GravityWellsVisualizer {
       this.spawnParticle(width, height)
     }
 
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private spawnParticle(width: number, height: number): void {
@@ -142,8 +145,6 @@ export class GravityWellsVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -360,8 +361,9 @@ export class GravityWellsVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

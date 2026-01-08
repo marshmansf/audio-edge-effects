@@ -3,6 +3,8 @@
  * Electric arcs that branch randomly - transparent bg, lower threshold for triggers
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface LightningOptions {
   container: HTMLElement
   colorScheme?: string
@@ -33,7 +35,7 @@ export class LightningVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private maxBolts: number
   private bolts: LightningBolt[] = []
@@ -71,7 +73,8 @@ export class LightningVisualizer {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     this.bolts = []
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private createBolt(startX: number, startY: number, endX: number, endY: number): LightningBolt {
@@ -114,8 +117,6 @@ export class LightningVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -258,8 +259,9 @@ export class LightningVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

@@ -4,6 +4,8 @@
  * Ripple effects from beat detection
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface HexagonGridOptions {
   container: HTMLElement
   colorScheme?: string
@@ -35,7 +37,7 @@ export class HexagonGridVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private hexagons: Hex[] = []
   private hexSize: number = 20
@@ -100,7 +102,8 @@ export class HexagonGridVisualizer {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     this.generateGrid()
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private drawHexagon(cx: number, cy: number, size: number): void {
@@ -171,8 +174,6 @@ export class HexagonGridVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -288,8 +289,9 @@ export class HexagonGridVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

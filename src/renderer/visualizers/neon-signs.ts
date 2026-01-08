@@ -3,6 +3,8 @@
  * Glowing tube-style lines that flicker slightly
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface NeonSignsOptions {
   container: HTMLElement
   colorScheme?: string
@@ -33,7 +35,7 @@ export class NeonSignsVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private tubeCount: number
   private tubes: NeonTube[] = []
@@ -104,13 +106,12 @@ export class NeonSignsVisualizer {
     this.analyser = analyser
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     this.generateTubes()
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -227,8 +228,9 @@ export class NeonSignsVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())

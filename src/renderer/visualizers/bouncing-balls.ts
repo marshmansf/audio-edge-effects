@@ -4,6 +4,8 @@
  * Beat detection triggers new balls - starts with initial balls
  */
 
+import { AnimationController } from '../utils/animation-controller'
+
 export interface BouncingBallsOptions {
   container: HTMLElement
   colorScheme?: string
@@ -38,7 +40,7 @@ export class BouncingBallsVisualizer {
   private ctx: CanvasRenderingContext2D
   private analyser: AnalyserNode | null = null
   private dataArray: Uint8Array | null = null
-  private animationId: number | null = null
+  private animationController: AnimationController | null = null
   private colorScheme: string
   private balls: Ball[] = []
   private maxBalls: number
@@ -79,7 +81,8 @@ export class BouncingBallsVisualizer {
     this.dataArray = new Uint8Array(analyser.frequencyBinCount)
     this.balls = []
     this.initialized = false
-    this.draw()
+    this.animationController = new AnimationController(() => this.draw())
+    this.animationController.start()
   }
 
   private spawnBall(x: number, energy: number): void {
@@ -109,8 +112,6 @@ export class BouncingBallsVisualizer {
 
   private draw = (): void => {
     if (!this.analyser || !this.dataArray) return
-
-    this.animationId = requestAnimationFrame(this.draw)
 
     this.analyser.getByteFrequencyData(this.dataArray)
 
@@ -295,8 +296,9 @@ export class BouncingBallsVisualizer {
   }
 
   destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId)
+    if (this.animationController) {
+      this.animationController.destroy()
+      this.animationController = null
     }
     this.canvas.remove()
     window.removeEventListener('resize', () => this.handleResize())
